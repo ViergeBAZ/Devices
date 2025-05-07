@@ -1,0 +1,77 @@
+version: '3'
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:ro
+      - vhostd:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+    networks:
+      backend:
+        aliases:
+          - nginx
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - vhostd:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
+
+  server-devices:
+     build:
+       context: .
+     environment:
+      - TZ=${TZ}
+      - PORT=${PORT}
+      - MONGODB_SERVER=${MONGODB_SERVER}
+      - MONGODB_USERNAME=${MONGODB_USERNAME}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD}
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+
+      - COMFRAN_SERVER=${COMFRAN_SERVER}
+      - COMFRAN_PORT=${COMFRAN_PORT}
+      - COMFRAN_USERNAME=${COMFRAN_USERNAME}
+      - COMFRAN_PASSWORD=${COMFRAN_PASSWORD}
+      - COMFRAN_DATABASE=${COMFRAN_DATABASE}
+      # jwt keys
+      - PROFILES_COMMERCE_JWT_TOKEN=${PROFILES_COMMERCE_JWT_TOKEN}
+      - PROFILES_FRANCHISE_JWT_TOKEN=${PROFILES_FRANCHISE_JWT_TOKEN}
+      - KAFKA_SERVER=${KAFKA_SERVER}
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_PORT=${VIRTUAL_PORT}
+      - LETSENCRYPT_HOST=${VIRTUAL_HOST}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+     restart: unless-stopped
+     networks:
+      backend:
+        aliases:
+          - devices
+     volumes:
+       - certs:/etc/nginx/certs:ro
+     depends_on:
+       - nginx-proxy
+
+volumes:
+  certs:
+  html:
+  vhostd:
+  acme:
+
+networks:
+  backend:
+    external:
+      name: lklpay
