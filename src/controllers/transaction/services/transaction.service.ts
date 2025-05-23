@@ -848,7 +848,7 @@ class TransactionService extends TransactionResumeService {
     }
 
     //Si el id del comercío no es 'all', undefined o null se filtra por el id del comercio
-    if (query.commerce != null && query.commerce !== undefined && query.commerce !== 'all') {
+    if (query.commerce != null && query.commerce !== 'all'){
       filter.commerce = query.commerce
     }
 
