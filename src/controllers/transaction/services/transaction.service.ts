@@ -840,10 +840,18 @@ class TransactionService extends TransactionResumeService {
     const start = query.start ?? 0
     const end = query.end ?? 10
     const limit = (end !== 0) ? end - start : 10
+
+    //Filtros default
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
       active: true
     }
+
+    //Si el id del comercío no es 'all', undefined o null se filtra por el id del comercio
+    if (query.commerce != null && query.commerce !== 'all'){
+      filter.commerce = query.commerce
+    }
+
     const transactions = await TransactionModel
       .aggregate()
       .match(filter)
