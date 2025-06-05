@@ -241,10 +241,14 @@ export class TransactionReportService {
       'Transaction Date': { $gte: startDate, $lte: endDate },
       'Application PAN': { $regex: getCardBrandRegex(brand) },
       transactionStatus: ETransactionStatus.APPROVED,
-      commerce,
       active: true
     }
 
+    //Si el id del comercío es diferente a null o al valor 'all' se filtra por el id del comercio
+    if (query.commerce != null && query.commerce !== 'all') {
+      filter.commerce = commerce
+    }
+    
     const transactions: any = await TransactionModel.find(filter, undefined, {
       sort: { 'Transaction Date': 1, 'Transaction Time': 1 }
     })
@@ -316,8 +320,12 @@ export class TransactionReportService {
       'Application PAN': { $regex: getCardBrandRegex(brand) },
       // transactionStatus: ETransactionStatus.APPROVED,
       // tefStatus: ETefStatus.APPROVED,
-      commerce,
       active: true
+    }
+
+    //Si el id del comercío es diferente a null o al valor 'all' se filtra por el id del comercio
+    if (query.commerce != null && query.commerce !== 'all') {
+      filter.commerce = commerce
     }
 
     const transactions: any = await TransactionModel.find(filter, undefined, {
