@@ -24,8 +24,6 @@ class UserRoutes extends ServerRouter {
     this.router.post('/', terminalController.create as RequestHandler)
     this.router.patch('/update', [backofficeMiddleware, validateReq(UpdateTerminalDto)], terminalController.update as RequestHandler)
     this.router.delete('/:id', [backofficeMiddleware, validateReq(DeleteTerminalDto, 'params')], terminalController.deleteTerminal as RequestHandler)
-    // this.router.patch('/assignTerminalFranchise', [backofficeMiddleware], terminalController.assignToFranchise as RequestHandler)
-    // this.router.patch('/assignTerminalCommerce', [backofficeMiddleware], terminalController.assignToCommerce as RequestHandler)
 
     this.router.post('/generateOtp', [backofficeMiddleware, validateReq(GenerateOtpDto)], terminalController.generateOtp as RequestHandler)
     this.router.post('/assignApiKeyWithOtp', [validateReq(AssingApiKeyWOtpDto)], terminalController.assignApiKeyWithOtp as RequestHandler)
