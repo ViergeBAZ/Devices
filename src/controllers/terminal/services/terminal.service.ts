@@ -203,7 +203,7 @@ class TerminalService {
       'arrivalTrackingGuide', 'parcelDistributor', 'arrivalDate', 'status',
       'pending', 'active', 'model', 'chipSerialNumber', 'chipTwoSerialNumber',
       'imeiTerminal', 'imeiTwoTerminal', 'branchId', 'commerce', 'franchise',
-      'operativeMode', 'commerceTpvManagerEmail'
+      'operativeMode'
     ]
 
     for (const field in updateFields) {
@@ -366,6 +366,12 @@ class TerminalService {
     await appSendEmail(terminal.commerceTpvManagerEmail, '[TPV] Codigo de verificación restablecido', template)
 
     return { passcode: newPasscode }
+  }
+
+  async deleteTerminal (id: string): Promise<ITerminal> {
+    const record = await TerminalModel.findByIdAndUpdate(id, { active: false, deletedAt: new Date() })
+    if (record == null) throw new AppErrorResponse({ statusCode: 404, name: 'Terminal no encontrada' })
+    return record
   }
 }
 

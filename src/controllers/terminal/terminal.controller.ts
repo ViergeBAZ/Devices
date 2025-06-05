@@ -194,6 +194,17 @@ class TerminalController {
       return res.status(statusCode).json(err)
     }
   }
+
+  public async deleteTerminal (req: Request, res: Response): Promise<AppControllerResponse> {
+    const { id } = req.params
+    try {
+      const result = await terminalService.deleteTerminal(id)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
 }
 
 export const terminalController: TerminalController = new TerminalController()

@@ -9,6 +9,7 @@ import { TpvLoginDto } from '@controllers/terminal/services/dtos/tpv-login.dto'
 import { AssingApiKeyWOtpDto } from '@controllers/terminal/services/dtos/assign-apikey-w-otp.dto'
 import { GenerateOtpDto } from '@controllers/terminal/services/dtos/generate-otp.dto'
 import { ResetApiKeyDto } from '@controllers/terminal/services/dtos/reset-apikey.dto'
+import { DeleteTerminalDto } from '@controllers/terminal/services/dtos/delete-terminal.dto'
 
 class UserRoutes extends ServerRouter {
   constructor () {
@@ -22,6 +23,7 @@ class UserRoutes extends ServerRouter {
     this.router.get('/getTerminalById/:id', terminalController.getTerminal as RequestHandler)
     this.router.post('/', terminalController.create as RequestHandler)
     this.router.patch('/update', [backofficeMiddleware, validateReq(UpdateTerminalDto)], terminalController.update as RequestHandler)
+    this.router.delete('/:id', [backofficeMiddleware, validateReq(DeleteTerminalDto, 'params')], terminalController.deleteTerminal as RequestHandler)
     // this.router.patch('/assignTerminalFranchise', [backofficeMiddleware], terminalController.assignToFranchise as RequestHandler)
     // this.router.patch('/assignTerminalCommerce', [backofficeMiddleware], terminalController.assignToCommerce as RequestHandler)
 
