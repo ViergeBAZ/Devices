@@ -14,7 +14,7 @@ export const TerminalSchema = new Schema<ITerminal>({
   id: { type: Number },
   name: { type: String, required: true },
   model: { type: String, required: true },
-  serialNumber: { type: String, required: true, unique: true },
+  serialNumber: { type: String, required: true },
   warehouseManager: { type: String, required: true },
   systemChargeResponsible: { type: String, required: true },
   arrivalTrackingGuide: { type: String, required: true },
@@ -46,8 +46,11 @@ export const TerminalSchema = new Schema<ITerminal>({
   /* defaults */
   createdAt: { type: Date, default: () => Date.now(), immutable: true },
   updatedAt: { type: Date, default: () => Date.now() },
+  deletedAt: { type: Date },
   active: { type: Boolean, default: true }
-})
+}, { autoIndex: true })
+
+TerminalSchema.index({ serialNumber: 1, deletedAt: 1 }, { unique: true })
 
 /* pre (middlewares) */
 TerminalSchema.pre('save', async function (next) {

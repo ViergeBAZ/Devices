@@ -21,6 +21,12 @@ export function appErrorResponseHandler (error: unknown | any): IErrorHandlerRes
     return { statusCode: 500, error: result }
   }
 
+  if (error?.name === 'CastError' && error?.kind === 'ObjectId') {
+    result.message = 'ID inválido proporcionado'
+    result.code = 'INVALID_OBJECT_ID'
+    return { statusCode: 400, code: 'INVALID_OBJECT_ID', error: result }
+  }
+
   if (error instanceof AxiosError) {
     const axiosError = error?.response?.data
     console.log('Error axios:', axiosError?.statusCode, axiosError?.name)

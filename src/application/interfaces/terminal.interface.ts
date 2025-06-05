@@ -91,5 +91,6 @@ export interface ITerminal {
   /* defaults */
   createdAt?: Date
   updatedAt?: Date
+  deletedAt?: Date
   active?: boolean
 }

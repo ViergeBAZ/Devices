@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-import { IsOptional, IsString, IsDateString, IsEnum, IsBoolean, IsEmail } from 'class-validator'
+import { IsOptional, IsString, IsDateString, IsEnum, IsBoolean } from 'class-validator'
 import { EOperativeMode, ETerminalStatus } from '@app/interfaces/terminal.interface'
 
 export class UpdateTerminalDto {
@@ -81,8 +81,4 @@ export class UpdateTerminalDto {
   @IsOptional()
   @IsString()
   franchise?: string
-
-  @IsOptional()
-  @IsEmail()
-  commerceTpvManagerEmail?: string
 }
