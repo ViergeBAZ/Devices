@@ -49,7 +49,6 @@ class TerminalService {
     if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
 
     const populated = (await this.populateResults([terminal]))[0]
-    console.log(populated)
     return populated
   }
 

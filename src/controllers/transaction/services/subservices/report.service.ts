@@ -241,14 +241,10 @@ export class TransactionReportService {
       'Transaction Date': { $gte: startDate, $lte: endDate },
       'Application PAN': { $regex: getCardBrandRegex(brand) },
       transactionStatus: ETransactionStatus.APPROVED,
+      commerce,
       active: true
     }
 
-    //Si el id del comercío es diferente a null o al valor 'all' se filtra por el id del comercio
-    if (query.commerce != null && query.commerce !== 'all') {
-      filter.commerce = commerce
-    }
-    
     const transactions: any = await TransactionModel.find(filter, undefined, {
       sort: { 'Transaction Date': 1, 'Transaction Time': 1 }
     })
@@ -313,7 +309,6 @@ export class TransactionReportService {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
     const brand = query.brand
-    const commerce = query?.commerce != null ? query?.commerce : { $regex: /^.*$/ }
 
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
@@ -323,15 +318,16 @@ export class TransactionReportService {
       active: true
     }
 
-    //Si el id del comercío es diferente a null o al valor 'all' se filtra por el id del comercio
-    if (query.commerce != null && query.commerce !== 'all') {
-      filter.commerce = commerce
-    }
+    if (query.commerce !== null && query.commerce !== 'all') filter.commerce = query.commerce
+
+    console.log(filter)
 
     const transactions: any = await TransactionModel.find(filter, undefined, {
       sort: { 'Transaction Date': 1, 'Transaction Time': 1 },
       allowDiskUse: true
     })
+
+    console.log(transactions.length)
 
     const commerceIds = [...new Set(transactions.map((transactions: any) => String(transactions.commerce)))]
     const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
