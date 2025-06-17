@@ -856,7 +856,7 @@ class TransactionService extends TransactionResumeService {
       .aggregate()
       .match(filter)
       .sort({ 'Transaction Date': -1, 'Transaction Time': -1 })
-      .project({ 'Transaction Date': 1, 'Transaction Time': 1, Amount: 1, comission: 1, commerce: 1, iva: 1, 'ID Transaction': 1, lklpayComission: 1, fixedComission: 1, type: 1, transactionStatus: 1, depositStatus: 1, tefStatus: 1 })
+      .project({ 'Transaction Date': 1, 'Transaction Time': 1, Amount: 1, comission: 1, commerce: 1, iva: 1, 'ID Transaction': 1, lklpayComission: 1, fixedComission: 1, type: 1, transactionStatus: 1, depositStatus: 1, tefStatus: 1, operationType: 1,  RRN: { $getField: { field: "37", input: { $arrayElemAt: ["$MIT Fields", 0] } } } })
       .skip(Number(start))
       .limit(Number(limit))
 
