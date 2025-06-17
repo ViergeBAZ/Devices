@@ -1,6 +1,6 @@
 import * as ExcelJS from 'exceljs'
 import { Parser } from 'json2csv'
-import { type FilterQuery } from 'mongoose'
+import mongoose, { type FilterQuery } from 'mongoose'
 import { type IUserLocals, type ITransaction } from '../dtos/transaction.dto'
 import { getCardBrandRegex } from '@app/utils/card.util'
 import { ETefStatus, ETransactionStatus } from '@app/interfaces/transaction.interface'
@@ -11,6 +11,7 @@ import { concatObjs, sumField } from '@app/utils/util.util'
 import { appProfilesInstance } from '@app/repositories/axios'
 import { AppErrorResponse } from '@app/models/app.response'
 import { type ITerminal } from '@app/interfaces/terminal.interface'
+import { TransactionModelTransaction } from '@app/repositories/mongoose/models-transactions/transaction.transaction.model'
 
 export class TransactionReportService {
   async getTransactionsReport (query: any, locals: IUserLocals): Promise<any> {
@@ -619,6 +620,49 @@ export class TransactionReportService {
     const excelBuffer = await workbook.xlsx.writeBuffer()
     const dateRange = startDate !== endDate ? `${startDate}-${endDate}` : startDate
     return { file: excelBuffer, fileName: `${commerceName} (${dateRange}).xlsx` }
+  }
+  async getBackofficeCSVReport (query: any): Promise<any> {
+    //Definir si el filtro comercio es obligatorio o sera opcional. (Devolver todos los comercios si no se especifica)
+    const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
+    const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
+    const commerce = query?.commerce != null ? query?.commerce : ''
+
+    const filter: FilterQuery<ITransaction> = {
+      'Transaction Date': { $gte: startDate, $lte: endDate },
+       commerce:new mongoose.Types.ObjectId(commerce)
+    }
+
+  const transactions = await TransactionModelTransaction.aggregate([
+    { $match: filter },
+    { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
+    { $project: {
+        Status: '$transactionStatus',
+        'S/N': '$IFD Serial Number',
+        'Fecha de Transaccion': '$Transaction Date',
+        'Hora de Transaccion': '$Transaction Time',
+        'Tipo de Transaccion': '$operationType',
+        Comercio: '$commerceName',
+        'PAN Enmascarado': '$Application PAN',
+        Banco: '$bank',
+        'Producto Bancario': '$bankProduct',
+        'Modo de Entrada': '$readMode',
+        'RRN': { $toString: { $arrayElemAt: ['$MIT Fields.37', 0] } },
+        Monto: { $toInt: '$Amount' },
+        cashback: { $toInt: '$tip' },
+        'Codigo de Respuesta': '$ISO CODE RESPONSE',
+        Descripcion: '$ISO CODE DESCRIPTION',
+        'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
+        TxnReference: '$txnReference'
+      }
+    }
+  ])
+    const fields = Object.keys(transactions[0])
+    const json2csv = new Parser({ fields })
+    const csv = json2csv.parse(transactions)
+    return {
+      file: csv,
+      fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
+    }
   }
 
   async getFranchisesReportBackoffice (query: any): Promise<any> {
