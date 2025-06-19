@@ -625,13 +625,14 @@ export class TransactionReportService {
     //Definir si el filtro comercio es obligatorio o sera opcional. (Devolver todos los comercios si no se especifica)
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
-    const commerce = query?.commerce != null ? query?.commerce : ''
+    const commerce = query?.commerce != null ? query?.commerce : null
 
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
-       commerce:new mongoose.Types.ObjectId(commerce)
     }
-
+   if (commerce != null && commerce !== 'all'){
+      filter.commerce = new mongoose.Types.ObjectId(commerce)
+    }
   const transactions = await TransactionModelTransaction.aggregate([
     { $match: filter },
     { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
