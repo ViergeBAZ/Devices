@@ -649,7 +649,7 @@ export class TransactionReportService {
         'Modo de Entrada': '$readMode',
         'RRN': { $toString: { $arrayElemAt: ['$MIT Fields.37', 0] } },
         Monto: { $divide: [{ $toInt: '$Amount' }, 100] },
-        cashback: { $divide: [{ $toInt: '$tip' }, 100] },
+        Cashback: { $divide: [{ $toInt: '$tip' }, 100] },
         'Monto total': { $divide: [{ $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] }, 100] },
         'Codigo de Respuesta': '$ISO CODE RESPONSE',
         Descripcion: '$ISO CODE DESCRIPTION',
