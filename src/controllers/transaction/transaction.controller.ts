@@ -579,8 +579,8 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
-      return res.status(400).json(error)
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
     }
   }
 
