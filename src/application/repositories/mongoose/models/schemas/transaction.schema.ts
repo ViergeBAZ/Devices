@@ -143,6 +143,7 @@ export const TransactionSchema = new Schema<ITransaction, Record<string, unknown
   MIT: { type: String, required: false },
   'MIT Fields': [{ type: MITFieldsSchema, required: false, default: [] }],
   tlv: { type: String, required: false },
+  tlvTags: { type: Object },
   TTQ: { type: String },
   TVR: { type: String },
   commerce: { type: String, required: true },
@@ -188,6 +189,7 @@ export const TransactionSchema = new Schema<ITransaction, Record<string, unknown
   operationType: { type: String, enum: EOperationType, required: true },
   readMode: { type: String },
   origin: { type: String },
+  txnReference: { type: String },
   /* refunds */
   refundPairId: { type: String },
   /* backup */
