@@ -608,7 +608,7 @@ class TransactionService extends TransactionResumeService {
     for (const commerce of commercesInfo) {
       if (groupedTransactions.find((group: any) => { return group._id === commerce._id }) == null) {
         groupedTransactions.push({
-          commerce: commerce._id, externalCommerceId: commerce.externalCommerceId ,total: 0, totalComission: 0, totalTransactions: 0
+          commerce: commerce._id, externalCommerceId: commerce.externalCommerceId, total: 0, totalComission: 0, totalTransactions: 0
         })
       }
     }
@@ -841,14 +841,14 @@ class TransactionService extends TransactionResumeService {
     const end = query.end ?? 10
     const limit = (end !== 0) ? end - start : 10
 
-    //Filtros default
+    // Filtros default
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
       active: true
     }
 
-    //Si el id del comercío no es 'all', undefined o null se filtra por el id del comercio
-    if (query.commerce != null && query.commerce !== 'all'){
+    // Si el id del comercío no es 'all', undefined o null se filtra por el id del comercio
+    if (query.commerce != null && query.commerce !== 'all') {
       filter.commerce = query.commerce
     }
 
@@ -856,7 +856,7 @@ class TransactionService extends TransactionResumeService {
       .aggregate()
       .match(filter)
       .sort({ 'Transaction Date': -1, 'Transaction Time': -1 })
-      .project({ 'Transaction Date': 1, 'Transaction Time': 1, Amount: 1, comission: 1, commerce: 1, iva: 1, 'ID Transaction': 1, lklpayComission: 1, fixedComission: 1, type: 1, transactionStatus: 1, depositStatus: 1, tefStatus: 1, operationType: 1,  RRN: { $getField: { field: "37", input: { $arrayElemAt: ["$MIT Fields", 0] } } } })
+      .project({ 'Transaction Date': 1, 'Transaction Time': 1, Amount: 1, comission: 1, commerce: 1, iva: 1, 'ID Transaction': 1, lklpayComission: 1, fixedComission: 1, type: 1, transactionStatus: 1, depositStatus: 1, tefStatus: 1, operationType: 1, RRN: { $getField: { field: '37', input: { $arrayElemAt: ['$MIT Fields', 0] } } } })
       .skip(Number(start))
       .limit(Number(limit))
 
