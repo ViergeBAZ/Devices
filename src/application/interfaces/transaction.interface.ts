@@ -164,6 +164,7 @@ export interface ITransaction {
   'MIT'?: string
   'MIT Fields': IMITFields[]
   tlv?: string
+  tlvTags?: string
   TTQ?: string
   TVR?: string
   comission: number
@@ -205,6 +206,7 @@ export interface ITransaction {
   operationType: EOperationType
   readMode: string
   origin: string
+  txnReference: string
   /* refunds */
   refundPairId: string
   /* backup */

@@ -75,7 +75,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     drawRow('Tipo:', `${cardType}, ${truncateStr(bank, 15)}, ${scheme}`)
 
     drawRow('Subtotal:', `$${(transaction.Amount - transaction.tip).toFixed(2)} MXN`)
-    drawRow('Propina:', `$${transaction.tip?.toFixed(2) ?? '0.00'} MXN`)
+    drawRow('Cashback:', `$${transaction.tip?.toFixed(2) ?? '0.00'} MXN`)
     drawRow('Total:', `$${transaction.Amount.toFixed(2)} MXN`)
     posY += 10
 
@@ -102,9 +102,11 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
 
     // Detalles adicionales
     drawRow('Referencia:', transaction.reference)
+    drawRow('RRN:', transaction['ID Transaction'])
+    drawRow('Id Transacción:', transaction.txnReference)
     drawRow('Autorización:', transaction['MIT Fields']?.[0]?.[38] ?? '-----')
     // drawRow('Operación:', transaction._id.toString().slice(-7))
-    drawRow('ID de terminal:', transaction['ID Terminal'])
+    drawRow('ID de terminal:', transaction['IFD Serial Number'] ?? '-----')
     drawRow('Secuencia:', extractSequence(transaction.tlv) ?? '-----')
     drawRow('AID:', extractAID(transaction.tlv) ?? '-----')
     drawRow('ARQC:', extractARQC(transaction.tlv) ?? '-----')
