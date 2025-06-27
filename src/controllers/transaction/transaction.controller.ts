@@ -402,7 +402,8 @@ class TransactionController {
       return res.status(400).json(error)
     }
   }
-    public async getBackofficeCSVReport (req: Request, res: Response): Promise<AppControllerResponse> {
+
+  public async getBackofficeCSVReport (req: Request, res: Response): Promise<AppControllerResponse> {
     try {
       const query = req.query
       const result = await transactionReportService.getBackofficeCSVReport(query)
@@ -560,6 +561,23 @@ class TransactionController {
       const response = await transactionService.readTransactionsTEF(query)
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getVoucherPdf (req: Request, res: Response): Promise<AppControllerResponse> {
+    try {
+      const id = req.params.id
+      const result = await transactionReportService.getTransactionVoucherPdf(id)
+      const file = result.file ?? null
+      const fileName: string = result.fileName ?? ''
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="' + fileName + '"'
+      })
+      return res.status(200).send(file)
     } catch (error) {
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)

@@ -58,6 +58,8 @@ class TransactionRoutes extends ServerRouter {
     this.router.get('/backoffice/monthlyReport1', /* [backofficeMiddleware], */ transactionController.getMonthlyReport1 as RequestHandler)
     this.router.get('/backoffice/monthlyReport2', /* [backofficeMiddleware], */ transactionController.getMonthlyReport2 as RequestHandler)
     this.router.get('/backoffice/monthlyReport3', /* [backofficeMiddleware], */ transactionController.getMonthlyReport3 as RequestHandler)
+
+    this.router.get('/backoffice/voucher/:id', transactionController.getVoucherPdf as RequestHandler)
     // ---------- Test -------------
     this.router.get('/test/test/test', transactionController.test as RequestHandler)
   }

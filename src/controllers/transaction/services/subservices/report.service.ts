@@ -12,6 +12,8 @@ import { appProfilesInstance } from '@app/repositories/axios'
 import { AppErrorResponse } from '@app/models/app.response'
 import { type ITerminal } from '@app/interfaces/terminal.interface'
 import { TransactionModelTransaction } from '@app/repositories/mongoose/models-transactions/transaction.transaction.model'
+import { getCommerce } from '@app/utils/db.util'
+import { createTxVoucherPdf } from '../reports/tx-voucher-pdf'
 
 export class TransactionReportService {
   async getTransactionsReport (query: any, locals: IUserLocals): Promise<any> {
@@ -621,43 +623,45 @@ export class TransactionReportService {
     const dateRange = startDate !== endDate ? `${startDate}-${endDate}` : startDate
     return { file: excelBuffer, fileName: `${commerceName} (${dateRange}).xlsx` }
   }
+
   async getBackofficeCSVReport (query: any): Promise<any> {
-    //Definir si el filtro comercio es obligatorio o sera opcional. (Devolver todos los comercios si no se especifica)
+    // Definir si el filtro comercio es obligatorio o sera opcional. (Devolver todos los comercios si no se especifica)
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
     const commerce = query?.commerce != null ? query?.commerce : null
 
     const filter: FilterQuery<ITransaction> = {
-      'Transaction Date': { $gte: startDate, $lte: endDate },
+      'Transaction Date': { $gte: startDate, $lte: endDate }
     }
-   if (commerce != null && commerce !== 'all'){
+    if (commerce != null && commerce !== 'all') {
       filter.commerce = new mongoose.Types.ObjectId(commerce)
     }
-  const transactions = await TransactionModelTransaction.aggregate([
-    { $match: filter },
-    { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
-    { $project: {
-        Status: '$transactionStatus',
-        'S/N': '$IFD Serial Number',
-        'Fecha de Transaccion': '$Transaction Date',
-        'Hora de Transaccion': '$Transaction Time',
-        'Tipo de Transaccion': '$operationType',
-        Comercio: '$commerceName',
-        'PAN Enmascarado': '$Application PAN',
-        Banco: '$bank',
-        'Producto Bancario': '$bankProduct',
-        'Modo de Entrada': '$readMode',
-        'RRN': { $toString: { $arrayElemAt: ['$MIT Fields.37', 0] } },
-        Monto: { $divide: [{ $toInt: '$Amount' }, 100] },
-        cashback: { $divide: [{ $toInt: '$tip' }, 100] },
-        'Monto total': { $divide: [{ $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] }, 100] },
-        'Codigo de Respuesta': '$ISO CODE RESPONSE',
-        Descripcion: '$ISO CODE DESCRIPTION',
-        'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
-        TxnReference: '$txnReference'
+    const transactions = await TransactionModelTransaction.aggregate([
+      { $match: filter },
+      { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
+      {
+        $project: {
+          Status: '$transactionStatus',
+          'S/N': '$IFD Serial Number',
+          'Fecha de Transaccion': '$Transaction Date',
+          'Hora de Transaccion': '$Transaction Time',
+          'Tipo de Transaccion': '$operationType',
+          Comercio: '$commerceName',
+          'PAN Enmascarado': '$Application PAN',
+          Banco: '$bank',
+          'Producto Bancario': '$bankProduct',
+          'Modo de Entrada': '$readMode',
+          RRN: { $toString: { $arrayElemAt: ['$MIT Fields.37', 0] } },
+          Monto: { $divide: [{ $toInt: '$Amount' }, 100] },
+          cashback: { $divide: [{ $toInt: '$tip' }, 100] },
+          'Monto total': { $divide: [{ $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] }, 100] },
+          'Codigo de Respuesta': '$ISO CODE RESPONSE',
+          Descripcion: '$ISO CODE DESCRIPTION',
+          'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
+          TxnReference: '$txnReference'
+        }
       }
-    }
-  ])
+    ])
     const fields = Object.keys(transactions[0])
     const json2csv = new Parser({ fields })
     const csv = json2csv.parse(transactions)
@@ -1676,6 +1680,20 @@ export class TransactionReportService {
 
     const excelBuffer = await workbook.xlsx.writeBuffer()
     return { file: excelBuffer, fileName: 'Reporte Mensual comercios.xlsx' }
+  }
+
+  async getTransactionVoucherPdf (transactionId: string): Promise<any> {
+    const transaction = await TransactionModel.findOne({ _id: transactionId, active: true }).lean()
+    if (transaction == null) throw new AppErrorResponse({ name: 'No se encontró la transacción', statusCode: 400 })
+    let commerce
+
+    try {
+      commerce = await getCommerce(transaction.commerce, ['financial', 'commercial'])
+    } catch (error) {}
+    if (commerce == null) throw new AppErrorResponse({ name: 'No se encontró el comercio', statusCode: 400 })
+    const pdfBuffer: Buffer = await createTxVoucherPdf(transaction, commerce)
+
+    return { file: pdfBuffer, fileName: `${transactionId}.pdf` }
   }
 }
 
