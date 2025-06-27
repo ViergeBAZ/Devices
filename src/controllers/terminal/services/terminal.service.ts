@@ -209,7 +209,7 @@ class TerminalService {
       if (!allowedFields.includes(field as keyof UpdateTerminalDto)) throw new AppErrorResponse({ statusCode: 403, name: `Campo no permitido: ${field}` })
     }
 
-    const terminal = await TerminalModel.findOne({ _id })
+    const terminal = await TerminalModel.findOne({ _id, active: true })
     if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
     const originalRecord = JSON.parse(JSON.stringify(terminal))
 
