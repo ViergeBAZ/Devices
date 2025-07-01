@@ -36,7 +36,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
 
     // Logo
     if (logoBuffer != null) {
-      doc.image(logoBuffer, { width: 160, align: 'center' }).moveDown()
+      doc.image(logoBuffer, 70, undefined, { width: 160 }).moveDown()
     }
     // Título
     doc.fontSize(14).text('Ticket digital de venta', { align: 'center' }).moveDown()
