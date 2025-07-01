@@ -36,7 +36,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
 
     // Logo
     if (logoBuffer != null) {
-      doc.image(logoBuffer, { width: 220, align: 'center' }).moveDown()
+      doc.image(logoBuffer, { width: 160, align: 'center' }).moveDown()
     }
     // Título
     doc.fontSize(14).text('Ticket digital de venta', { align: 'center' }).moveDown()
@@ -74,8 +74,10 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     const scheme = capitalizeWords(transaction.scheme)
     drawRow('Tipo:', `${cardType}, ${truncateStr(bank, 15)}, ${scheme}`)
 
-    drawRow('Subtotal:', `$${(transaction.Amount - transaction.tip).toFixed(2)} MXN`)
-    drawRow('Cashback:', `$${transaction.tip?.toFixed(2) ?? '0.00'} MXN`)
+    const tip = transaction.tip / 100
+
+    drawRow('Subtotal:', `$${(transaction.Amount - tip).toFixed(2)} MXN`)
+    drawRow('Cashback:', `$${tip?.toFixed(2) ?? '0.00'} MXN`)
     drawRow('Total:', `$${transaction.Amount.toFixed(2)} MXN`)
     posY += 10
 
@@ -103,7 +105,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     // Detalles adicionales
     drawRow('Referencia:', transaction.reference)
     drawRow('RRN:', transaction['ID Transaction'])
-    drawRow('Id Transacción:', transaction.txnReference)
+    drawRow('ID Transacción:', transaction.txnReference)
     drawRow('Autorización:', transaction['MIT Fields']?.[0]?.[38] ?? '-----')
     // drawRow('Operación:', transaction._id.toString().slice(-7))
     drawRow('ID de terminal:', transaction['IFD Serial Number'] ?? '-----')
