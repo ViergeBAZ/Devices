@@ -662,6 +662,12 @@ export class TransactionReportService {
         }
       }
     ])
+   if (transactions.length === 0){
+    return {
+      file: '', 
+      fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
+    }
+   }
     const fields = Object.keys(transactions[0])
     const json2csv = new Parser({ fields })
     const csv = json2csv.parse(transactions)
