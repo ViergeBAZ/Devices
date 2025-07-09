@@ -423,13 +423,7 @@ class TransactionController {
     try {
       const query = req.query
       const result = await transactionReportService.getBackofficeCSVReportClarification(query)
-      const file = result.file ?? null
-      const fileName: string = result.fileName ?? ''
-      res.set({
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename="' + fileName + '"'
-      })
-      return res.status(200).send(file)
+      return res.status(200).json(result)
     } catch (error) {
       console.log(error)
       return res.status(400).json(error)

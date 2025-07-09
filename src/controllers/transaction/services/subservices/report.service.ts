@@ -738,24 +738,15 @@ export class TransactionReportService {
           Descripcion: '$ISO CODE DESCRIPTION',
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
           TxnReference: '$txnReference',
-          'ID Afiliate': '$ID Afiliate',
+          'ID Afiliate': '$ID Afiliate'
           
         }
       }
     ])
    if (transactions.length === 0){
-    return {
-      file: '', 
-      fileName: `report${startDate}_generatedAt${String(Date.now())}.csv`
-    }
+    return []
    }
-    const fields = Object.keys(transactions[0])
-    const json2csv = new Parser({ fields })
-    const csv = json2csv.parse(transactions)
-    return {
-      file: csv,
-      fileName: `report${startDate}_generatedAt${String(Date.now())}.csv`
-    }
+    return transactions
   }
   async getFranchisesReportBackoffice (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
