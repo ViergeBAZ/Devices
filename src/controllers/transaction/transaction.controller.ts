@@ -419,6 +419,23 @@ class TransactionController {
       return res.status(400).json(error)
     }
   }
+    public async getBackofficeCSVReportClarification (req: Request, res: Response): Promise<AppControllerResponse> {
+    try {
+      const query = req.query
+      const result = await transactionReportService.getBackofficeCSVReportClarification(query)
+      const file = result.file ?? null
+      const fileName: string = result.fileName ?? ''
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="' + fileName + '"'
+      })
+      return res.status(200).send(file)
+    } catch (error) {
+      console.log(error)
+      return res.status(400).json(error)
+    }
+  }
+
 
   public async getFranchisesReportBackoffice (req: Request, res: Response): Promise<AppControllerResponse> {
     const locals = res.locals; console.log(locals)

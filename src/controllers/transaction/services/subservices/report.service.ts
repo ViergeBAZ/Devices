@@ -676,7 +676,87 @@ export class TransactionReportService {
       fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
     }
   }
+  async getBackofficeCSVReportClarification (query: any): Promise<any> {
+    const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
+    const commerce = query?.commerce != null ? query?.commerce : null
+    const rrn = query?.rrn != null ? query?.rrn : null
+    const numeroAuthorization = query?.numeroAuthorization != null ? query?.numeroAuthorization : null
+    const numeroAffiliation = query?.numeroAffiliation != null ? query?.numeroAffiliation : null
+    // Validacion mínimo 3 filtros obligatorios
+    const activeFilters = [
+      startDate !== '000000',
+      commerce !== null,
+      rrn !== null,
+      numeroAuthorization !== null,
+      numeroAffiliation !== null
+    ].filter(Boolean).length
 
+    if (activeFilters < 3) {
+      throw new AppErrorResponse({ 
+        name: 'Filtros insuficientes', 
+        description: 'Se requieren al menos 3 filtros para generar el reporte de aclaración',
+        statusCode: 400,
+        isOperational: true 
+      })
+    }
+    const filter: FilterQuery<ITransaction> = {
+      'Transaction Date': { $gte: startDate }
+    }
+    if (commerce != null) {
+      filter.commerce = commerce
+    }
+    if (rrn != null) {
+      filter['ID Transaction'] = rrn
+    }
+    if (numeroAuthorization != null) {
+      filter['MIT Fields.38'] = { $in: [numeroAuthorization] }
+    }
+    if (numeroAffiliation != null) {
+      filter['ID Afiliate'] = { $in: [numeroAffiliation] }
+    }
+
+    const transactions = await TransactionModel.aggregate([
+      { $match: filter },
+      { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
+      {
+        $project: {
+          Status: '$transactionStatus',
+          'S/N': '$IFD Serial Number',
+          'Fecha de Transaccion': '$Transaction Date',
+          'Hora de Transaccion': '$Transaction Time',
+          'Tipo de Transaccion': '$operationType',
+          Comercio: '$commerceName',
+          'PAN Enmascarado': '$Application PAN',
+          Banco: '$bank',
+          'Producto Bancario': '$bankProduct',
+          'Modo de Entrada': '$readMode',
+          RRN: '$ID Transaction',
+          Monto: { $divide: [{ $toInt: '$Amount' }, 100] },
+          Cashback: { $divide: [{ $toInt: '$tip' }, 100] },
+          'Monto total': { $divide: [{ $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] }, 100] },
+          'Codigo de Respuesta': '$ISO CODE RESPONSE',
+          Descripcion: '$ISO CODE DESCRIPTION',
+          'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
+          TxnReference: '$txnReference',
+          'ID Afiliate': '$ID Afiliate',
+          
+        }
+      }
+    ])
+   if (transactions.length === 0){
+    return {
+      file: '', 
+      fileName: `report${startDate}_generatedAt${String(Date.now())}.csv`
+    }
+   }
+    const fields = Object.keys(transactions[0])
+    const json2csv = new Parser({ fields })
+    const csv = json2csv.parse(transactions)
+    return {
+      file: csv,
+      fileName: `report${startDate}_generatedAt${String(Date.now())}.csv`
+    }
+  }
   async getFranchisesReportBackoffice (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
