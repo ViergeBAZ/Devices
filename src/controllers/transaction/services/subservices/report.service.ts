@@ -676,7 +676,7 @@ export class TransactionReportService {
       fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
     }
   }
-  async getBackofficeCSVReportClarification (query: any): Promise<any> {
+  async getBackofficeReportClarification (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const commerce = query?.commerce != null ? query?.commerce : null
     const rrn = query?.rrn != null ? query?.rrn : null

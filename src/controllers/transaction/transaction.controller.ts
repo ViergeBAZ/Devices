@@ -419,10 +419,10 @@ class TransactionController {
       return res.status(400).json(error)
     }
   }
-    public async getBackofficeCSVReportClarification (req: Request, res: Response): Promise<AppControllerResponse> {
+    public async getBackofficeReportClarification (req: Request, res: Response): Promise<AppControllerResponse> {
     try {
       const query = req.query
-      const result = await transactionReportService.getBackofficeCSVReportClarification(query)
+      const result = await transactionReportService.getBackofficeReportClarification(query)
       return res.status(200).json(result)
     } catch (error) {
       console.log(error)
