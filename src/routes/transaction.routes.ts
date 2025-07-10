@@ -52,7 +52,7 @@ class TransactionRoutes extends ServerRouter {
     this.router.get('/backoffice/transactionsReport3', transactionController.getTransactionsReportBackoffice3 as RequestHandler)
     this.router.get('/backoffice/transactionsReport4', transactionController.getTransactionsReportBackoffice4 as RequestHandler)
     this.router.get('/backoffice/BackofficeCSVReport', transactionController.getBackofficeCSVReport as RequestHandler)
-    this.router.get('/backoffice/BackofficeReportClarification', transactionController.getBackofficeReportClarification as RequestHandler)
+    this.router.get('/backoffice/clarification', transactionController.getBackofficeReportClarification as RequestHandler)
     this.router.get('/backoffice/franchisesReport', transactionController.getFranchisesReportBackoffice as RequestHandler)
     this.router.get('/backoffice/franchisesReport2', transactionController.getFranchisesReportBackoffice2 as RequestHandler)
     this.router.get('/backoffice/monthlyReport', /* [backofficeMiddleware], */ transactionController.getMonthlyReport as RequestHandler)
