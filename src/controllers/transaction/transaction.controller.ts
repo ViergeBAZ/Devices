@@ -1,6 +1,8 @@
 import { type Request, type Response } from 'express'
 /* repo */
 import { AppMongooseRepo } from '@app/repositories/mongoose'
+/* models */
+import { VoucherDownloadModel } from '@app/repositories/mongoose/models'
 /* services */
 import transactionService from './services/transaction.service'
 /* handlers */
@@ -568,9 +570,22 @@ class TransactionController {
   }
 
   public async getVoucherPdf (req: Request, res: Response): Promise<AppControllerResponse> {
+    console.log('req:',res.locals.user)
+    console.log('query:',req.query)
+    const dataVoucherUsers = {
+      userId: res.locals.user._id,
+      userName: res.locals.user.name,
+      userEmail: res.locals.user.email,
+      downloadTime: new Date(),
+      voucherNumber: String(req.query.id),
+      origin: String(req.query.origin)
+    }
+    
     try {
       const id = req.params.id
       const result = await transactionReportService.getTransactionVoucherPdf(id)
+      const voucherDownload = new VoucherDownloadModel(dataVoucherUsers)
+      await voucherDownload.save()
       const file = result.file ?? null
       const fileName: string = result.fileName ?? ''
       res.set({
