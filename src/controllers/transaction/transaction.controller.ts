@@ -425,7 +425,8 @@ class TransactionController {
     try {
       const query = req.query
       const result = await transactionReportService.getBackofficeReportClarification(query)
-      return res.status(200).json(result)
+      const response = appSuccessResponseHandler('success', result)
+      return res.status(200).json(response)
     } catch (error) {
       console.log(error)
       return res.status(400).json(error)
