@@ -570,8 +570,6 @@ class TransactionController {
   }
 
   public async getVoucherPdf (req: Request, res: Response): Promise<AppControllerResponse> {
-    console.log('req:',res.locals.user)
-    console.log('query:',req.query)
     const dataVoucherUsers = {
       userId: res.locals.user._id,
       userName: res.locals.user.name,
