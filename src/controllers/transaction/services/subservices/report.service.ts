@@ -682,13 +682,18 @@ export class TransactionReportService {
     const rrn = query?.rrn != null ? query?.rrn : null
     const numeroAuthorization = query?.numeroAuthorization != null ? query?.numeroAuthorization : null
     const numeroAffiliation = query?.numeroAffiliation != null ? query?.numeroAffiliation : null
+    const cardNumber = query?.cardNumber != null ? query?.cardNumber : null
+    const amount = query?.amount != null ? query?.amount : null  
+
     // Validacion mínimo 3 filtros obligatorios
     const activeFilters = [
       startDate !== '000000',
       commerce !== null,
       rrn !== null,
       numeroAuthorization !== null,
-      numeroAffiliation !== null
+      numeroAffiliation !== null,
+      cardNumber !== null,
+      amount !== null
     ].filter(Boolean).length
 
     if (activeFilters < 3) {
@@ -700,7 +705,7 @@ export class TransactionReportService {
       })
     }
     const filter: FilterQuery<ITransaction> = {
-      'Transaction Date': { $gte: startDate }
+      'Transaction Date': {  $gte: startDate }
     }
     if (commerce != null) {
       filter.commerce = commerce
@@ -714,7 +719,12 @@ export class TransactionReportService {
     if (numeroAffiliation != null) {
       filter['ID Afiliate'] = { $in: [numeroAffiliation] }
     }
-
+    if (cardNumber && /^\d{4}$/.test(cardNumber)) {
+      filter['Application PAN'] = { $regex: new RegExp(`${cardNumber}$`) }
+    }
+    if (amount != null) {
+      filter.Amount = { $eq: Math.round(amount * 100) }
+    }
     const transactions = await TransactionModel.aggregate([
       { $match: filter },
       { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
