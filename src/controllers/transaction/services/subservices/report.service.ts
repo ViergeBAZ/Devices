@@ -680,8 +680,8 @@ export class TransactionReportService {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const commerce = query?.commerce != null ? query?.commerce : null
     const rrn = query?.rrn != null ? query?.rrn : null
-    const numeroAuthorization = query?.numeroAuthorization != null ? query?.numeroAuthorization : null
-    const numeroAffiliation = query?.numeroAffiliation != null ? query?.numeroAffiliation : null
+    const authorizationNumber = query?.authorizationNumber != null ? query?.authorizationNumber : null
+    const affiliationNumber = query?.affiliationNumber != null ? query?.affiliationNumber : null
     const cardNumber = query?.cardNumber != null ? query?.cardNumber : null
     const amount = query?.amount != null ? query?.amount : null  
 
@@ -690,8 +690,8 @@ export class TransactionReportService {
       startDate !== '000000',
       commerce !== null,
       rrn !== null,
-      numeroAuthorization !== null,
-      numeroAffiliation !== null,
+      authorizationNumber !== null,
+      affiliationNumber !== null,
       cardNumber !== null,
       amount !== null
     ].filter(Boolean).length
@@ -713,11 +713,11 @@ export class TransactionReportService {
     if (rrn != null) {
       filter['ID Transaction'] = rrn
     }
-    if (numeroAuthorization != null) {
-      filter['MIT Fields.38'] = { $in: [numeroAuthorization] }
+    if (authorizationNumber != null) {
+      filter['MIT Fields.38'] = { $in: [authorizationNumber] }
     }
-    if (numeroAffiliation != null) {
-      filter['ID Afiliate'] = { $in: [numeroAffiliation] }
+    if (affiliationNumber != null) {
+      filter['ID Afiliate'] = { $in: [affiliationNumber] }
     }
     if (cardNumber && /^\d{4}$/.test(cardNumber)) {
       filter['Application PAN'] = { $regex: new RegExp(`${cardNumber}$`) }
