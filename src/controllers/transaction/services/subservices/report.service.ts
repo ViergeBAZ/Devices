@@ -723,7 +723,7 @@ export class TransactionReportService {
       filter['Application PAN'] = { $regex: new RegExp(`${cardNumber}$`) }
     }
     if (amount != null) {
-      filter.Amount = { $eq: Math.round(amount) }
+      filter.Amount = { $eq: parseFloat(amount) }
     }
     const transactions = await TransactionModel.aggregate([
       { $match: filter },
