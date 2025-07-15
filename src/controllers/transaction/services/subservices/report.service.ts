@@ -723,7 +723,7 @@ export class TransactionReportService {
       filter['Application PAN'] = { $regex: new RegExp(`${cardNumber}$`) }
     }
     if (amount != null) {
-      filter.Amount = { $eq: Math.round(amount * 100) }
+      filter.Amount = { $eq: Math.round(amount) }
     }
     const transactions = await TransactionModel.aggregate([
       { $match: filter },
@@ -741,9 +741,9 @@ export class TransactionReportService {
           'Producto Bancario': '$bankProduct',
           'Modo de Entrada': '$readMode',
           RRN: '$ID Transaction',
-          Monto: { $divide: [{ $toInt: '$Amount' }, 100] },
-          Cashback: { $divide: [{ $toInt: '$tip' }, 100] },
-          'Monto total': { $divide: [{ $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] }, 100] },
+          Monto: '$Amount',
+          Cashback: '$tip',
+          'Monto total': { $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] },
           'Codigo de Respuesta': '$ISO CODE RESPONSE',
           Descripcion: '$ISO CODE DESCRIPTION',
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
