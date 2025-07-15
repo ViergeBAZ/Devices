@@ -743,7 +743,7 @@ export class TransactionReportService {
           RRN: '$ID Transaction',
           Monto: '$Amount',
           Cashback: '$tip',
-          'Monto total': { $add: [{ $toInt: '$Amount' }, { $toInt: '$tip' }] },
+          'Monto total': { $add: [{ $toDouble: '$Amount' }, { $toDouble: '$tip' }] },
           'Codigo de Respuesta': '$ISO CODE RESPONSE',
           Descripcion: '$ISO CODE DESCRIPTION',
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
