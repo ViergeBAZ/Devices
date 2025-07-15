@@ -219,10 +219,24 @@ class TransactionController {
   }
 
   public async getTransactionsFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
-    const query = req.query as IGetTransaction
-    const locals = res.locals as IUserLocals
+    const query = req.query as any
+    const locals = res.locals
     try {
-      const response = await transactionService.getTransactionsFranchise(query, locals)
+      const response = await transactionService.getTransactionsFranchise(query, locals.user._id)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      console.log(error)
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getTransactionsAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    const query = req.query as any
+    const locals = res.locals
+    try {
+      const response = await transactionService.getTransactionsAdvisor(query, locals.user._id)
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
@@ -308,19 +322,6 @@ class TransactionController {
     }
   }
 
-  public async test (req: Request, res: Response): Promise<AppControllerResponse> {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
-      const response = transactionService.test()
-      const result = appSuccessResponseHandler('success', response)
-      return res.status(200).json(result)
-    } catch (error: any) {
-      console.log(error?.response)
-      const { statusCode, error: err } = appErrorResponseHandler(error)
-      return res.status(statusCode).json(err)
-    }
-  }
-
   public async getTransactionsReport (req: Request, res: Response): Promise<AppControllerResponse> {
     try {
       const query = req.query
@@ -388,6 +389,42 @@ class TransactionController {
     }
   }
 
+  public async getTransactionsReportFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    try {
+      const query = req.query as any
+      const locals = res.locals
+      const result = await transactionReportService.getTransactionsReportFranchise(query, locals.user._id)
+      const file = result.file ?? null
+      const fileName: string = result.fileName ?? ''
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="' + fileName + '"'
+      })
+      return res.status(200).send(file)
+    } catch (error) {
+      console.log(error)
+      return res.status(400).json(error)
+    }
+  }
+
+  public async getTransactionsReportAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    try {
+      const query = req.query as any
+      const locals = res.locals
+      const result = await transactionReportService.getTransactionsReportAdvisor(query, locals.user._id)
+      const file = result.file ?? null
+      const fileName: string = result.fileName ?? ''
+      res.set({
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="' + fileName + '"'
+      })
+      return res.status(200).send(file)
+    } catch (error) {
+      console.log(error)
+      return res.status(400).json(error)
+    }
+  }
+
   public async getTransactionsReportBackoffice4 (req: Request, res: Response): Promise<AppControllerResponse> {
     try {
       const query = req.query
@@ -421,7 +458,8 @@ class TransactionController {
       return res.status(400).json(error)
     }
   }
-    public async getBackofficeReportClarification (req: Request, res: Response): Promise<AppControllerResponse> {
+
+  public async getBackofficeReportClarification (req: Request, res: Response): Promise<AppControllerResponse> {
     try {
       const query = req.query
       const result = await transactionReportService.getBackofficeReportClarification(query)
@@ -432,7 +470,6 @@ class TransactionController {
       return res.status(400).json(error)
     }
   }
-
 
   public async getFranchisesReportBackoffice (req: Request, res: Response): Promise<AppControllerResponse> {
     const locals = res.locals; console.log(locals)
@@ -590,7 +627,7 @@ class TransactionController {
       voucherNumber: String(req.query.id),
       origin: String(req.query.origin)
     }
-    
+
     try {
       const id = req.params.id
       const result = await transactionReportService.getTransactionVoucherPdf(id)

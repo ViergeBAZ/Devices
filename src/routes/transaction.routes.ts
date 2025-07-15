@@ -3,9 +3,11 @@ import { ServerRouter } from './models/route'
 /* controllers */
 import { transactionController } from '@controllers/transaction/transaction.controller'
 /* middlewares */
-import { adminAuthMiddleware, backofficeMiddleware, commerceMiddleware, franchiseMiddleware } from '@app/middlewares/auth.middleware'
+import { adminAuthMiddleware, advisorMiddleware, backofficeMiddleware, commerceMiddleware, franchiseMiddleware } from '@app/middlewares/auth.middleware'
 import { validateReq } from '@app/middlewares/class-validation.middleware'
 import { TpvBatchSettlementDto } from '@controllers/transaction/services/dtos/tpv-batch-settlement.dto'
+import { GetTransactionsDto } from '@controllers/transaction/services/dtos/get-transactions.dto'
+import { GetTxReportDto } from '@controllers/transaction/services/dtos/get-tx-report.dto'
 
 class TransactionRoutes extends ServerRouter {
   constructor () {
@@ -39,8 +41,10 @@ class TransactionRoutes extends ServerRouter {
 
     this.router.get('/backoffice/search', [backofficeMiddleware], transactionController.searchByBackoffice as RequestHandler)
 
-    this.router.get('/franchise/getTransactions', franchiseMiddleware as RequestHandler, transactionController.getTransactionsFranchise as RequestHandler)
-    this.router.get('/franchise/getTransactionsGroupedByMonth', franchiseMiddleware as RequestHandler, transactionController.getTransactionsFranchiseGroupedByMonth as RequestHandler)
+    this.router.get('/franchise/getTransactions', [franchiseMiddleware, validateReq(GetTransactionsDto, 'query')], transactionController.getTransactionsFranchise as RequestHandler)
+    this.router.get('/franchise/getTransactionsGroupedByMonth', [franchiseMiddleware], transactionController.getTransactionsFranchiseGroupedByMonth as RequestHandler)
+
+    this.router.get('/advisor/getTransactions', [advisorMiddleware, validateReq(GetTransactionsDto, 'query')], transactionController.getTransactionsAdvisor as RequestHandler)
 
     this.router.get('/commerce/getTpvDispersableTransactions', commerceMiddleware, transactionController.getTpvDispersableTransactions as RequestHandler)
     this.router.get('/commerce/getAvailableTransactionsUrgentDeposit', commerceMiddleware, transactionController.getAvailableTransactionsUrgentDeposit as RequestHandler)
@@ -59,10 +63,10 @@ class TransactionRoutes extends ServerRouter {
     this.router.get('/backoffice/monthlyReport1', /* [backofficeMiddleware], */ transactionController.getMonthlyReport1 as RequestHandler)
     this.router.get('/backoffice/monthlyReport2', /* [backofficeMiddleware], */ transactionController.getMonthlyReport2 as RequestHandler)
     this.router.get('/backoffice/monthlyReport3', /* [backofficeMiddleware], */ transactionController.getMonthlyReport3 as RequestHandler)
+    this.router.get('/advisor/transactionsReport', [advisorMiddleware, validateReq(GetTxReportDto, 'query')], transactionController.getTransactionsReportAdvisor as RequestHandler)
+    this.router.get('/franchise/transactionsReport', [franchiseMiddleware, validateReq(GetTxReportDto, 'query')], transactionController.getTransactionsReportFranchise as RequestHandler)
 
-    this.router.get('/backoffice/voucher/:id', [backofficeMiddleware],transactionController.getVoucherPdf as RequestHandler)
-    // ---------- Test -------------
-    this.router.get('/test/test/test', transactionController.test as RequestHandler)
+    this.router.get('/backoffice/voucher/:id', transactionController.getVoucherPdf as RequestHandler)
   }
 }
 

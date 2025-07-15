@@ -1,6 +1,7 @@
 /* aliases an environment variables */
 import 'module-alias/register'
 import 'dotenv/config'
+import 'reflect-metadata'
 
 /* application */
 import express, { type Application, type RequestHandler, type Router } from 'express'

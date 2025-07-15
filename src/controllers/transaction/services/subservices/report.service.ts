@@ -14,6 +14,11 @@ import { type ITerminal } from '@app/interfaces/terminal.interface'
 import { TransactionModelTransaction } from '@app/repositories/mongoose/models-transactions/transaction.transaction.model'
 import { getCommerce } from '@app/utils/db.util'
 import { createTxVoucherPdf } from '../reports/tx-voucher-pdf'
+import { type GetTxReportDto } from '../dtos/get-tx-report.dto'
+import { ObjectId } from 'mongodb'
+import { borderStyle, headerStyle } from '@app/constants/excel.constants'
+import { createAdvisorTxExcel } from '../reports/advisor-transactions-excel'
+import { createFranchiseTxExcel } from '../reports/franchise-transactions-excel'
 
 export class TransactionReportService {
   async getTransactionsReport (query: any, locals: IUserLocals): Promise<any> {
@@ -121,19 +126,6 @@ export class TransactionReportService {
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
-
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
 
     const headerStrings = 'Monto,Comisión,IVA,A depositar,Fijo,IvaFijo,Fecha,Hora,ID de Transaccion,Tipo,Tarjeta,Estatus,Estado del deposito'.split(',')
     const headerRow = worksheet.addRow(headerStrings)
@@ -434,19 +426,6 @@ export class TransactionReportService {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
 
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
-
     const headerRow = worksheet.addRow(
       'Monto,Comisión,IVA,A depositar,Banco,Distro,Lklpay,Fijo,IvaBanco,IvaDistro,IvaLklpay,IvaFijo,MsiLkl,MsiBanco,Fecha,Hora,ID de Transaccion,Tipo,Tarjeta,Comercio,Distribuidor,Clabe comercio,Clabe distribuidor,TransactionStatus,TefStatus,DepositStatus'.split(',')
     )
@@ -512,6 +491,56 @@ export class TransactionReportService {
     return { file: excelBuffer, fileName: `Reporte ${dateRange} Generado el ${generationTime}.xlsx` }
   }
 
+  async getTransactionsReportFranchise (dto: GetTxReportDto, franchiseId: string): Promise<any> {
+    const startDate = dto.startDate
+    const endDate = dto.endDate
+
+    const filter: FilterQuery<ITransaction> = {
+      'Transaction Date': { $gte: startDate, $lte: endDate },
+      franchiseId: new ObjectId(franchiseId),
+      active: true
+    }
+
+    if (dto.commerce !== null) filter.commerce = dto.commerce
+
+    const transactions: any = await TransactionModel.find(filter, undefined, {
+      sort: { 'Transaction Date': 1, 'Transaction Time': 1 },
+      allowDiskUse: true
+    }).lean()
+
+    const currentDate = new Date()
+    const buffer = await createFranchiseTxExcel(transactions)
+    const dateRange = startDate !== endDate ? `${startDate}-${endDate}` : startDate
+    const formattedTime = formatTimestamp(Date.now())
+    const generationTime = dateRange !== getStringDate(currentDate) ? formattedTime : formattedTime.split(' ')[1]
+    return { file: buffer, fileName: `Reporte ${dateRange} Generado el ${generationTime}.xlsx` }
+  }
+
+  async getTransactionsReportAdvisor (dto: GetTxReportDto, advisorId: string): Promise<any> {
+    const startDate = dto.startDate
+    const endDate = dto.endDate
+
+    const filter: FilterQuery<ITransaction> = {
+      'Transaction Date': { $gte: startDate, $lte: endDate },
+      advisorId: new ObjectId(advisorId),
+      active: true
+    }
+
+    if (dto.commerce !== null) filter.commerce = dto.commerce
+
+    const transactions: any = await TransactionModel.find(filter, undefined, {
+      sort: { 'Transaction Date': 1, 'Transaction Time': 1 },
+      allowDiskUse: true
+    }).lean()
+
+    const currentDate = new Date()
+    const buffer = await createAdvisorTxExcel(transactions)
+    const dateRange = startDate !== endDate ? `${startDate}-${endDate}` : startDate
+    const formattedTime = formatTimestamp(Date.now())
+    const generationTime = dateRange !== getStringDate(currentDate) ? formattedTime : formattedTime.split(' ')[1]
+    return { file: buffer, fileName: `Reporte ${dateRange} Generado el ${generationTime}.xlsx` }
+  }
+
   async getTransactionsReportBackoffice4 (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
@@ -560,19 +589,6 @@ export class TransactionReportService {
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
-
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
 
     const columnHeaders = 'ID de Transaccion,Fecha,Hora,Monto,Comisión,IVA,Fijo,IvaFijo,A depositar,Tarjeta'.split(',')
     const headerRow = worksheet.addRow(columnHeaders)
@@ -662,12 +678,12 @@ export class TransactionReportService {
         }
       }
     ])
-   if (transactions.length === 0){
-    return {
-      file: '', 
-      fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
+    if (transactions.length === 0) {
+      return {
+        file: '',
+        fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
+      }
     }
-   }
     const fields = Object.keys(transactions[0])
     const json2csv = new Parser({ fields })
     const csv = json2csv.parse(transactions)
@@ -676,6 +692,7 @@ export class TransactionReportService {
       fileName: `report${startDate}-${endDate}_generatedAt${String(Date.now())}.csv`
     }
   }
+
   async getBackofficeReportClarification (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const commerce = query?.commerce != null ? query?.commerce : null
@@ -683,7 +700,7 @@ export class TransactionReportService {
     const authorizationNumber = query?.authorizationNumber != null ? query?.authorizationNumber : null
     const affiliationNumber = query?.affiliationNumber != null ? query?.affiliationNumber : null
     const cardNumber = query?.cardNumber != null ? query?.cardNumber : null
-    const amount = query?.amount != null ? query?.amount : null  
+    const amount = query?.amount != null ? query?.amount : null
 
     // Validacion mínimo 3 filtros obligatorios
     const activeFilters = [
@@ -697,15 +714,15 @@ export class TransactionReportService {
     ].filter(Boolean).length
 
     if (activeFilters < 3) {
-      throw new AppErrorResponse({ 
-        name: 'Filtros insuficientes', 
+      throw new AppErrorResponse({
+        name: 'Filtros insuficientes',
         description: 'Se requieren al menos 3 filtros para generar el reporte de aclaración',
         statusCode: 400,
-        isOperational: true 
+        isOperational: true
       })
     }
     const filter: FilterQuery<ITransaction> = {
-      'Transaction Date': {  $gte: startDate }
+      'Transaction Date': { $gte: startDate }
     }
     if (commerce != null) {
       filter.commerce = commerce
@@ -749,15 +766,16 @@ export class TransactionReportService {
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
           TxnReference: '$txnReference',
           'Numero de Afiliacion': '$ID Afiliate'
-          
+
         }
       }
     ])
-   if (transactions.length === 0){
-    return []
-   }
+    if (transactions.length === 0) {
+      return []
+    }
     return transactions
   }
+
   async getFranchisesReportBackoffice (query: any): Promise<any> {
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
@@ -814,19 +832,6 @@ export class TransactionReportService {
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
-
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
 
     const headerRow = worksheet.addRow(
       'Distribuidor,Total Ventas,Comisión Distribuidor,Comercios'.split(',')
@@ -1011,19 +1016,6 @@ export class TransactionReportService {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
 
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
-
     const headerRow = worksheet.addRow(
       'Distribuidor,Total Ventas,Comisión Distribuidor,Cambaceo nuevos,Cambaceo mensual,Comercios'.split(',')
     )
@@ -1111,19 +1103,6 @@ export class TransactionReportService {
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
-
-    const borderStyle = {
-      top: { style: 'thin', color: { argb: 'aaaaaa' } },
-      left: { style: 'thin', color: { argb: 'aaaaaa' } },
-      bottom: { style: 'thin', color: { argb: 'aaaaaa' } },
-      right: { style: 'thin', color: { argb: 'aaaaaa' } }
-    }
-
-    const headerStyle = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'c3f7ef' }
-    }
 
     const headerRow = worksheet.addRow(
       '_id,Comercio,Distribuidor,Fecha Alta,Status,Estado,Ventas'.split(',')
