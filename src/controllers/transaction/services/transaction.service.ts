@@ -15,6 +15,7 @@ import { ObjectId } from 'mongodb'
 import { appProfilesInstance } from '@app/repositories/axios'
 import { customLog, sumField } from '@app/utils/util.util'
 import { type TpvBatchSettlementDto } from './dtos/tpv-batch-settlement.dto'
+import { type GetTransactionsDto } from './dtos/get-transactions.dto'
 // import { createWriteStream } from 'fs'
 interface FinalObject {
   tpv: Record<string, any[]>
@@ -520,193 +521,83 @@ class TransactionService extends TransactionResumeService {
   }
 
   // Distros
-  async getTransactionsFranchise (query: any, locals: any): Promise<any[]> {
-    const currentDate = new Date()
-    const stringCurrentDate = getStringDate(currentDate)
-    const franchiseId = new ObjectId(locals.user._id)
-    const advisorId = query.advisorId
-    const commerceId = query.commerceId
+  async getTransactionsFranchise (dto: GetTransactionsDto, franchiseId: string): Promise<any> {
+    const startDate = dto.startDate ?? '000000'
+    const endDate = dto.endDate ?? '999999'
+    const start = dto.start ?? 0
+    const end = dto.end ?? 10
+    const limit = (end !== 0) ? end - start : 10
 
-    let startDate = query.startDate != null ? query.startDate : stringCurrentDate
-    let endDate = query.endDate != null ? query.endDate : stringCurrentDate
-
-    const queryFilter = query.filter
-
-    if (queryFilter === 'week') {
-      const lastMonday = new Date(currentDate)
-      lastMonday.setDate(currentDate.getDate() - (currentDate.getDay() + 6) % 7)
-      const nextSunday = new Date(currentDate)
-      nextSunday.setDate(currentDate.getDate() + (7 - (currentDate.getDay() + 6) % 7))
-      startDate = getStringDate(lastMonday)
-      endDate = getStringDate(nextSunday)
-      const filter: FilterQuery<ITransaction> = {
-        transactionStatus: ETransactionStatus.APPROVED,
-        franchiseId,
-        'Transaction Date': { $gte: startDate, $lte: endDate },
-        active: true
-      }
-      if (commerceId != null) filter.commerce = commerceId
-      if (advisorId != null) filter.advisordId = advisorId
-      const groupedTransactions: any[] = await TransactionModel.aggregate([
-        { $match: filter },
-        { $sort: { createdAt: 1 } },
-        {
-          $group: {
-            _id: '$Transaction Date',
-            date: { $first: '$Transaction Date' },
-            total: { $sum: '$Amount' },
-            totalComission: { $sum: '$franchiseComission' },
-            totalTransactions: { $sum: 1 }
-          }
-        }
-        // { $project: { _id: 1 } }
-      ])
-
-      for (const group of groupedTransactions) {
-        group.day = getDayName(convertStringToDate(group.date))
-      }
-    }
-    if (queryFilter === 'month') {
-      startDate = `${String(stringCurrentDate.substring(0, 4))}00`
-      endDate = `${String(stringCurrentDate.substring(0, 4))}99`
-    }
+    const commerceId = dto.commerce
 
     const filter: FilterQuery<ITransaction> = {
-      transactionStatus: ETransactionStatus.APPROVED,
-      franchiseId,
+      franchiseId: new ObjectId(franchiseId),
       'Transaction Date': { $gte: startDate, $lte: endDate },
       active: true
     }
 
     if (commerceId != null) filter.commerce = commerceId
-    if (advisorId != null) filter.advisordId = advisorId
+    const selection = { Amount: 1, 'Transaction Date': 1, 'Transaction Time': 1, transactionStatus: 1, authorization: 1, commerce: 1, 'ID Transaction': 1 }
 
-    const groupedTransactions: any[] = await TransactionModel.aggregate([
-      { $match: filter },
-      { $sort: { createdAt: 1 } },
-      {
-        $group: {
-          _id: '$commerce',
-          commerce: { $first: '$commerce' },
-          total: { $sum: '$Amount' },
-          totalComission: { $sum: '$franchiseComission' },
-          totalTransactions: { $sum: 1 }
-        }
-      },
-      { $sort: { total: -1 } }
+    const [records, resumeRaw, count] = await Promise.all([
+      TransactionModel.find(filter).select(selection).skip(start).limit(limit).lean(),
+
+      TransactionModel.aggregate<ITerminalAggregator>()
+        .match({ ...filter, transactionStatus: ETransactionStatus.APPROVED })
+        .group({
+          _id: null,
+          Amount: { $sum: '$Amount' },
+          Sold: { $sum: 1 }
+        }),
+
+      TransactionModel.countDocuments(filter)
     ])
 
-    // Agregar comercios sin transacciones encontradas
-    let commercesInfo = []
-    try {
-      const res = await appProfilesInstance.get('/user/franchise/getCommerces', {
-        headers: { Authorization: `Bearer ${String(locals.token)}` }
-      })
-      commercesInfo = res.data.response
-    } catch (error) { console.log('No respondió el servidor profiles') }
+    const resume = resumeRaw?.[0] ?? { Amount: 0, Sold: 0 }
 
-    for (const commerce of commercesInfo) {
-      if (groupedTransactions.find((group: any) => { return group._id === commerce._id }) == null) {
-        groupedTransactions.push({
-          commerce: commerce._id, externalCommerceId: commerce.externalCommerceId, total: 0, totalComission: 0, totalTransactions: 0
-        })
-      }
-    }
+    const populated = await this.populateResults(records, true, false, false)
 
-    const advisorsInfo: any = {}
-    const uniqueAdvisors = [...new Set(commercesInfo.map((commerceInfo: { adviser: string }) => commerceInfo?.adviser))]
-    for (const advisor of uniqueAdvisors) {
-      try {
-        const response2 = await appProfilesInstance.get(`/advisor/admin/getAdvisorById/${advisor as string}`)
-        advisorsInfo[advisor as string] = response2.data.response
-      } catch (error) { console.log('No respondió el servidor profiles') }
-    }
-
-    // Aqui se incluyen comercios de los que no se pudo recuperar información
-    const notFoundCommerces = []
-    // Actualizar nombre de comercio y asesor
-    for (const element of groupedTransactions) {
-      const commerceId = element.commerce
-      const commerceInfo = commercesInfo.find((commerce: any) => commerce._id === commerceId)
-
-      if (commerceInfo == null) {
-        element.active = false
-        notFoundCommerces.push(commerceId)
-        // continue
-      }
-
-      let advisorName = 'x'
-      const advisor = advisorsInfo?.[commerceInfo?.adviser]
-
-      if (advisor != null) advisorName = `${String(advisor.name)} ${String(advisor.firstLastName)} ${String(advisor.secondLastName)}`
-      element.commerce = commerceInfo?.financial?.businessName ?? 'x'
-      element.adviser = advisorName ?? 'x'
-      element.businessLine = commerceInfo?.businessLine ?? 'x'
-      element._id = commerceInfo?._id ?? 'x'
-    }
-
-    return groupedTransactions
+    return { transactions: populated, resume, total: count }
   }
 
-  async getTransactionsFranchiseGroupedByMonth (query: any, locals: any): Promise<any> {
-    const franchiseId = new ObjectId(locals.user._id)
+  // Advisor
+  async getTransactionsAdvisor (dto: GetTransactionsDto, advisorId: string): Promise<any> {
+    const startDate = dto.startDate ?? '000000'
+    const endDate = dto.endDate ?? '999999'
+    const start = dto.start ?? 0
+    const end = dto.end ?? 10
+    const limit = (end !== 0) ? end - start : 10
+
+    const commerceId = dto.commerce
+
     const filter: FilterQuery<ITransaction> = {
-      transactionStatus: ETransactionStatus.APPROVED,
-      franchiseId,
+      advisorId: new ObjectId(advisorId),
+      'Transaction Date': { $gte: startDate, $lte: endDate },
       active: true
     }
 
-    const groupedTransactions: any[] = await TransactionModel.aggregate([
-      { $match: filter },
-      {
-        $addFields: {
-          transactionDate: {
-            $dateFromString: {
-              dateString: {
-                $concat: [
-                  '20', // Agrega el prefijo '20' para formar el año completo
-                  { $substr: ['$Transaction Date', 0, 2] },
-                  { $substr: ['$Transaction Date', 2, 2] },
-                  { $substr: ['$Transaction Date', 4, 2] }
-                ]
-              },
-              format: '%Y%m%d'
-            }
-          }
-        }
-      },
-      { $sort: { transactionDate: 1 } },
-      {
-        $group: {
-          _id: {
-            month: { $month: '$transactionDate' },
-            year: { $year: '$transactionDate' }
-          },
-          total: { $sum: '$Amount' },
-          totalComission: { $sum: '$franchiseComission' },
-          totalTransactions: { $sum: 1 },
-          distinctCommerces: { $addToSet: '$commerce' }
-        }
-      }
+    if (commerceId != null) filter.commerce = commerceId
+    const selection = { Amount: 1, 'Transaction Date': 1, 'Transaction Time': 1, transactionStatus: 1, authorization: 1, commerce: 1, 'ID Transaction': 1 }
+
+    const [records, resumeRaw, count] = await Promise.all([
+      TransactionModel.find(filter).select(selection).skip(start).limit(limit).lean(),
+
+      TransactionModel.aggregate<ITerminalAggregator>()
+        .match({ ...filter, transactionStatus: ETransactionStatus.APPROVED })
+        .group({
+          _id: null,
+          Amount: { $sum: '$Amount' },
+          Sold: { $sum: 1 }
+        }),
+
+      TransactionModel.countDocuments(filter)
     ])
 
-    const uniqueCommercesCount = [...new Set(groupedTransactions.map(group => group.distinctCommerces).flat())].length
+    const resume = resumeRaw?.[0] ?? { Amount: 0, Sold: 0 }
 
-    let commerceCount
-    try {
-      const response = await appProfilesInstance.get('/user/franchise/getCommerces', {
-        headers: { Authorization: `Bearer ${String(locals.token)}` }
-      })
-      commerceCount = response.data.response.length
-    } catch (error) { console.log('No respondió el servidor profiles') }
+    const populated = await this.populateResults(records, true, false, false)
 
-    const resume = {
-      commerceCount: commerceCount ?? String(uniqueCommercesCount) + '*',
-      totalTransactions: sumField(groupedTransactions, 'totalTransactions'),
-      totalComission: sumField(groupedTransactions, 'totalComission'),
-      total: sumField(groupedTransactions, 'total')
-    }
-    return { groupedTransactions, resume }
+    return { transactions: populated, resume, total: count }
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -894,8 +785,22 @@ class TransactionService extends TransactionResumeService {
     return { transactions, resume: resume[0] ?? { Amount: 0, Comission: 0, Deposit: 0, Sold: 0, iva: 0, lklpayComission: 0, fixedComission: 0 }, total: count }
   }
 
-  async getTransactionsByIdBackoffice (transactionId: string): Promise<any> {
+  async getTransactionByIdBackoffice (transactionId: string): Promise<any> {
     const transaction = await TransactionModel.findOne({ _id: transactionId })
+    if (transaction == null) throw new AppErrorResponse({ name: 'No se encontró la transacción', statusCode: 404 })
+    const populated = (await this.populateResults([transaction]))[0]
+    return populated
+  }
+
+  async getTransactionByIdFranchise (transactionId: string, franchiseId: string): Promise<any> {
+    const transaction = await TransactionModel.findOne({ _id: transactionId, active: true, franchiseId: new ObjectId(franchiseId) })
+    if (transaction == null) throw new AppErrorResponse({ name: 'No se encontró la transacción', statusCode: 404 })
+    const populated = (await this.populateResults([transaction]))[0]
+    return populated
+  }
+
+  async getTransactionByIdAdvisor (transactionId: string, advisorId: string): Promise<any> {
+    const transaction = await TransactionModel.findOne({ _id: transactionId, active: true, advisorId: new ObjectId(advisorId) })
     if (transaction == null) throw new AppErrorResponse({ name: 'No se encontró la transacción', statusCode: 404 })
     const populated = (await this.populateResults([transaction]))[0]
     return populated
@@ -917,53 +822,71 @@ class TransactionService extends TransactionResumeService {
     return total
   }
 
-  async populateResults (resultObj: any): Promise<any> {
+  async populateResults (resultObj: any, populateCommerces = true, populateFranchises = true, populateBranches = true): Promise<any> {
     const transactions = JSON.parse(JSON.stringify(resultObj))
     if (transactions == null || transactions.length === 0) return transactions
 
-    let commerces: any, franchises: any, branches: any
+    let commerces: any = {}; let franchises: any = {}; let branches: any = {}
+
     try {
-      const commerceIds = [...new Set(transactions.map((transaction: ITransaction) => transaction.commerce))]
-      const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
-      commerces = response.data.response
+      const promises = []
 
-      const franchiseIds = [...new Set(transactions.map((transaction: ITransaction) => transaction.franchiseId))]
-      const response2 = await appProfilesInstance.get(`franchise/backoffice/getFranchiseNames/?ids[]=${franchiseIds.join('&ids[]=')}`)
-      franchises = response2.data.response
+      if (populateCommerces) {
+        const commerceIds = [...new Set(transactions.map((t: ITransaction) => t.commerce))]
+        if (commerceIds.length > 0) {
+          promises.push(
+            appProfilesInstance
+              .get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
+              .then(res => (commerces = res.data.response ?? {}))
+          )
+        }
+      }
 
-      const branchIds = [...new Set(transactions.map((transaction: ITransaction) => transaction.branchId))]
-      const response3 = await appProfilesInstance.get(`branch/backoffice/getBranches/?branchIds[]=${branchIds.join('&branchIds[]=')}`)
-      branches = response3.data.response
+      if (populateFranchises) {
+        const franchiseIds = [...new Set(transactions.map((t: ITransaction) => t.franchiseId))]
+        if (franchiseIds.length > 0) {
+          promises.push(
+            appProfilesInstance
+              .get(`franchise/backoffice/getFranchiseNames/?ids[]=${franchiseIds.join('&ids[]=')}`)
+              .then(res => (franchises = res.data.response ?? {}))
+          )
+        }
+      }
+
+      if (populateBranches) {
+        const branchIds = [...new Set(transactions.map((t: ITransaction) => t.branchId))]
+        if (branchIds.length > 0) {
+          promises.push(
+            appProfilesInstance
+              .get(`branch/backoffice/getBranches/?branchIds[]=${branchIds.join('&branchIds[]=')}`)
+              .then(res => (branches = res.data.response ?? {}))
+          )
+        }
+      }
+
+      await Promise.all(promises)
     } catch (error) {
       customLog('No se obtuvo respuesta del servidor profiles')
     }
 
     return transactions.map((x: ITransaction) => ({
       ...x,
-      commerceName: commerces?.[String(x.commerce)]?.name,
-      franchiseName: franchises?.[String(x.franchiseId)]?.name,
-      branchName: branches?.[String(x.branchId)]?.branchName,
-      commerceInfo: {
+      ...(populateCommerces && {
         commerceName: commerces?.[String(x.commerce)]?.name,
-        commerceInternalId: commerces?.[String(x.commerce)]?.internalId,
-        commerceResponsible: commerces?.[String(x.commerce)]?.commerceResponsible
-      },
-      branchInfo: { ...branches?.[String(x.branchId)] }
+        commerceInfo: {
+          commerceName: commerces?.[String(x.commerce)]?.name,
+          commerceInternalId: commerces?.[String(x.commerce)]?.internalId,
+          commerceResponsible: commerces?.[String(x.commerce)]?.commerceResponsible
+        }
+      }),
+      ...(populateFranchises && {
+        franchiseName: franchises?.[String(x.franchiseId)]?.name
+      }),
+      ...(populateBranches && {
+        branchName: branches?.[String(x.branchId)]?.branchName,
+        branchInfo: { ...branches?.[String(x.branchId)] }
+      })
     }))
-  }
-
-  async test (): Promise<any> {
-    const updated = await TransactionModel.updateMany(
-      {
-        transactionStatus: ETransactionStatus.APPROVED,
-        'Transaction Date': '240705'
-      },
-      {
-        tefStatus: ETefStatus.APPROVED
-      }
-    )
-
-    console.log(updated)
   }
 }
 

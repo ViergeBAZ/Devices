@@ -1,5 +1,5 @@
 import type { AccumulatorOperator } from 'mongoose'
-import { type IUserPayload } from '@app/dtos/auth.dto'
+import { type IUserTokenPayload } from '@app/dtos/auth.dto'
 
 export type { ITransaction } from '@app/interfaces/transaction.interface'
 
@@ -59,7 +59,7 @@ export interface IGetTransactionMonthResponse {
 
 /* locals */
 export interface IUserLocals {
-  user: IUserPayload
+  user: IUserTokenPayload
 }
 
 export interface ICommerceAggregator {

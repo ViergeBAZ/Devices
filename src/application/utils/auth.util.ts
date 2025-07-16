@@ -2,16 +2,25 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 
+const commerceKey = process.env.COMMERCE_JWT_PRIVATE_KEY
+const advisorKey = process.env.ADVISOR_JWT_PRIVATE_KEY
+const franchiseKey = process.env.FRANCHISE_JWT_PRIVATE_KEY
+const backofficeKey = process.env.BACKOFFICE_JWT_PRIVATE_KEY
+
 export function verifyCommerceToken<T> (token: string): T {
-  return jwt.verify(token, process.env.COMMERCE_JWT_PRIVATE_KEY ?? '') as T
+  return jwt.verify(token, commerceKey ?? '') as T
 }
 
 export function verifyFranchiseToken<T> (token: string): T {
-  return jwt.verify(token, process.env.FRANCHISE_JWT_PRIVATE_KEY ?? '') as T
+  return jwt.verify(token, franchiseKey ?? '') as T
+}
+
+export function verifyAdvisorToken<T> (token: string): T {
+  return jwt.verify(token, advisorKey ?? '') as T
 }
 
 export function verifyBackofficeToken<T> (token: string): T {
-  return jwt.verify(token, process.env.BACKOFFICE_JWT_PRIVATE_KEY ?? '') as T
+  return jwt.verify(token, backofficeKey ?? '') as T
 }
 
 export async function generateApiKey (): Promise<{ apiKey: string, hashedApiKey: string }> {
