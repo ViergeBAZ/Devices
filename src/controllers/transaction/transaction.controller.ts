@@ -246,20 +246,6 @@ class TransactionController {
     }
   }
 
-  public async getTransactionsFranchiseGroupedByMonth (req: Request, res: Response): Promise<AppControllerResponse> {
-    const query = req.query as IGetTransaction
-    const locals = res.locals as IUserLocals
-    try {
-      const response = await transactionService.getTransactionsFranchiseGroupedByMonth(query, locals)
-      const result = appSuccessResponseHandler('success', response)
-      return res.status(200).json(result)
-    } catch (error) {
-      console.log(error)
-      const { statusCode, error: err } = appErrorResponseHandler(error)
-      return res.status(statusCode).json(err)
-    }
-  }
-
   public async getAdvisorAmount (req: Request, res: Response): Promise<AppControllerResponse> {
     const body = req.body
     try {
@@ -310,10 +296,34 @@ class TransactionController {
     }
   }
 
-  public async getTransactionsByIdBackoffice (req: Request, res: Response): Promise<AppControllerResponse> {
+  public async getTransactionByIdBackoffice (req: Request, res: Response): Promise<AppControllerResponse> {
     const transactionId = req.params?.id
     try {
-      const response = await transactionService.getTransactionsByIdBackoffice(transactionId)
+      const response = await transactionService.getTransactionByIdBackoffice(transactionId)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getTransactionByIdFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const transactionId = req.params?.id
+    try {
+      const response = await transactionService.getTransactionByIdFranchise(transactionId, res.locals.user._id)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getTransactionByIdAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    const transactionId = req.params?.id
+    try {
+      const response = await transactionService.getTransactionByIdAdvisor(transactionId, res.locals.user._id)
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
@@ -620,9 +630,9 @@ class TransactionController {
 
   public async getVoucherPdf (req: Request, res: Response): Promise<AppControllerResponse> {
     const dataVoucherUsers = {
-      userId: res.locals.user._id,
-      userName: res.locals.user.name,
-      userEmail: res.locals.user.email,
+      userId: res.locals?.user?._id,
+      userName: res.locals?.user?.name,
+      userEmail: res.locals.user?.email,
       downloadTime: new Date(),
       voucherNumber: String(req.query.id),
       origin: String(req.query.origin)
@@ -645,20 +655,6 @@ class TransactionController {
       return res.status(statusCode).json(err)
     }
   }
-
-  // public async sendEmail (req: Request, res: Response): Promise<AppControllerResponse> {
-  //   const id = req.params?.id
-  //   const locals = res.locals as IUserLocals
-
-  //   try {
-  //     const response = await transactionService.sendEmail(id, locals)
-  //     const result = appSuccessResponseHandler('success', response)
-  //     return res.status(200).json(result)
-  //   } catch (error) {
-  //     const { statusCode, error: err } = appErrorResponseHandler(error)
-  //     return res.status(statusCode).json(err)
-  //   }
-  // }
 }
 
 export const transactionController: TransactionController = new TransactionController()

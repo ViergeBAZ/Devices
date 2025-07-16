@@ -36,15 +36,15 @@ class TransactionRoutes extends ServerRouter {
     this.router.get('/tpv/getTpvTransactionResume', commerceMiddleware, transactionController.getTpvTransactionResume as RequestHandler)
 
     this.router.get('/backoffice/getTransactions', [backofficeMiddleware], transactionController.getTransactionsBackoffice as RequestHandler)
-    this.router.get('/backoffice/getTransactionById/:id', [backofficeMiddleware], transactionController.getTransactionsByIdBackoffice as RequestHandler)
-    this.router.get('/backoffice/getPendingBalance', [backofficeMiddleware], transactionController.getCommercePendingBalanceBackoffice as RequestHandler)
+    this.router.get('/backoffice/getTransactionById/:id', [backofficeMiddleware], transactionController.getTransactionByIdBackoffice as RequestHandler)
 
     this.router.get('/backoffice/search', [backofficeMiddleware], transactionController.searchByBackoffice as RequestHandler)
 
     this.router.get('/franchise/getTransactions', [franchiseMiddleware, validateReq(GetTransactionsDto, 'query')], transactionController.getTransactionsFranchise as RequestHandler)
-    this.router.get('/franchise/getTransactionsGroupedByMonth', [franchiseMiddleware], transactionController.getTransactionsFranchiseGroupedByMonth as RequestHandler)
+    this.router.get('/franchise/getTransactionById/:id', [franchiseMiddleware], transactionController.getTransactionByIdFranchise as RequestHandler)
 
     this.router.get('/advisor/getTransactions', [advisorMiddleware, validateReq(GetTransactionsDto, 'query')], transactionController.getTransactionsAdvisor as RequestHandler)
+    this.router.get('/advisor/getTransactionById/:id', [advisorMiddleware], transactionController.getTransactionByIdAdvisor as RequestHandler)
 
     this.router.get('/commerce/getTpvDispersableTransactions', commerceMiddleware, transactionController.getTpvDispersableTransactions as RequestHandler)
     this.router.get('/commerce/getAvailableTransactionsUrgentDeposit', commerceMiddleware, transactionController.getAvailableTransactionsUrgentDeposit as RequestHandler)
@@ -67,6 +67,8 @@ class TransactionRoutes extends ServerRouter {
     this.router.get('/franchise/transactionsReport', [franchiseMiddleware, validateReq(GetTxReportDto, 'query')], transactionController.getTransactionsReportFranchise as RequestHandler)
 
     this.router.get('/backoffice/voucher/:id', transactionController.getVoucherPdf as RequestHandler)
+    this.router.get('/advisor/voucher/:id', [advisorMiddleware], transactionController.getVoucherPdf as RequestHandler)
+    this.router.get('/franchise/voucher/:id', [franchiseMiddleware], transactionController.getVoucherPdf as RequestHandler)
   }
 }
 

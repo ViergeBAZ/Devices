@@ -736,7 +736,7 @@ export class TransactionReportService {
     if (affiliationNumber != null) {
       filter['ID Afiliate'] = { $in: [affiliationNumber] }
     }
-    if (cardNumber && /^\d{4}$/.test(cardNumber)) {
+    if (cardNumber != null && /^\d{4}$/.test(cardNumber)) {
       filter['Application PAN'] = { $regex: new RegExp(`${cardNumber}$`) }
     }
     if (amount != null) {
@@ -1651,8 +1651,6 @@ export class TransactionReportService {
       const totalComission = transactionsFound?.totalComission ?? 0
       const processorComission = transactionsFound?.processorComission ?? 0
       const franchiseComission = transactionsFound?.franchiseComission ?? 0
-      const lklpayComission = transactionsFound?.lklpayComission ?? 0
-      const fixedComission = transactionsFound?.fixedComission ?? 0
 
       const margin = totalComission - processorComission
       const operativeCost = 0
