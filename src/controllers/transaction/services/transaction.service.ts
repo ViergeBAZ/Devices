@@ -540,7 +540,7 @@ class TransactionService extends TransactionResumeService {
     const selection = { Amount: 1, 'Transaction Date': 1, 'Transaction Time': 1, transactionStatus: 1, authorization: 1, commerce: 1, 'ID Transaction': 1 }
 
     const [records, resumeRaw, count] = await Promise.all([
-      TransactionModel.find(filter).select(selection).skip(start).limit(limit).lean(),
+      TransactionModel.find(filter).select(selection).skip(start).limit(limit).sort({ 'Transaction Date': -1, 'Transaction Time': -1 }).lean(),
 
       TransactionModel.aggregate<ITerminalAggregator>()
         .match({ ...filter, transactionStatus: ETransactionStatus.APPROVED })
@@ -580,7 +580,7 @@ class TransactionService extends TransactionResumeService {
     const selection = { Amount: 1, 'Transaction Date': 1, 'Transaction Time': 1, transactionStatus: 1, authorization: 1, commerce: 1, 'ID Transaction': 1 }
 
     const [records, resumeRaw, count] = await Promise.all([
-      TransactionModel.find(filter).select(selection).skip(start).limit(limit).lean(),
+      TransactionModel.find(filter).select(selection).skip(start).limit(limit).sort({ 'Transaction Date': -1, 'Transaction Time': -1 }).lean(),
 
       TransactionModel.aggregate<ITerminalAggregator>()
         .match({ ...filter, transactionStatus: ETransactionStatus.APPROVED })
