@@ -13,8 +13,9 @@ import { type UpdateTerminalDto } from './dtos/update-terminal.dto'
 import { appSendEmail } from '@app/utils/mail.util'
 import { resetTpvPasscodeTemplate } from '@app/templates/reset-tpv-passcode.template'
 import { generateRandomString } from '@app/utils/string.util'
+import { ObjectId } from 'mongodb'
+import { getCommercesByField } from '@app/utils/db.util'
 class TerminalService {
-  /* profile */
   async getTerminals (query: IGetTerminalsQuery): Promise<typeof data> {
     if (query?.filter == null) throw new AppErrorResponse({ name: 'No se encontraron parametros', statusCode: 400 })
     const end = Number(query?.end ?? 0)
@@ -40,10 +41,96 @@ class TerminalService {
     return data
   }
 
+  async getTerminalsFranchise (franchiseId: string, query: IGetTerminalsQuery): Promise<typeof data> {
+    if (query?.filter == null) throw new AppErrorResponse({ name: 'No se encontraron parametros', statusCode: 400 })
+    const end = Number(query?.end ?? 0)
+    const start = Number(query?.start ?? 0)
+    const limit = (end !== 0) ? end - start : 10
+
+    const filter = query.filter
+    const queryFilter = { location: filter, franchise: new ObjectId(franchiseId), active: true }
+    const count = await TerminalModel.count(queryFilter)
+
+    const terminals = await TerminalModel.find(queryFilter, undefined, {
+      skip: start, limit
+    }).select('serialNumber commerce status id name model')
+
+    const resume = await TerminalModel.aggregate()
+      .match(queryFilter)
+      .group({ _id: '$name', locations: { $push: '$location' }, count: { $sum: 1 } })
+      .lookup({ from: 'terminals', localField: '_id', foreignField: 'name', as: 'terminals' })
+      .project({
+        _id: 1,
+        total: {
+          $size: {
+            $filter: {
+              input: '$terminals',
+              as: 'terminal',
+              cond: {
+                $eq: ['$$terminal.location', query.filter]
+              }
+            }
+          }
+        }
+      })
+      .exec()
+
+    const commerceIds = [...new Set(terminals.map((terminal: any) => String(terminal.commerce)))]
+    const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
+    const names = response.data.response
+
+    const terminalsCopy = JSON.parse(JSON.stringify(terminals))
+    for (const terminal of terminalsCopy) {
+      terminal.commerceName = names?.[String(terminal.commerce)]?.name ?? '-'
+    }
+    const data = { count, terminals: terminalsCopy, resume }
+    return data
+  }
+
+  async getTerminalsAdvisor (advisorId: string, query: IGetTerminalsQuery): Promise<typeof data> {
+    if (query?.filter == null) throw new AppErrorResponse({ name: 'No se encontraron parametros', statusCode: 400 })
+    const end = Number(query?.end ?? 0)
+    const start = Number(query?.start ?? 0)
+    const limit = (end !== 0) ? end - start : 10
+
+    const filter = query.filter
+    const count = await TerminalModel.count({ location: filter, active: true })
+
+    const commerces = await getCommercesByField('adviser', advisorId, ['_id', 'adviser'])
+    const commerceIds = [...new Set(commerces.map((commerce: any) => String(commerce._id)))]
+
+    const terminals = await TerminalModel.find({ location: filter, commerce: { $in: commerceIds }, active: true }, undefined, {
+      skip: start, limit
+    }).select('serialNumber commerce status id name model')
+
+    const terminalCommerceIds = [...new Set(terminals.map((terminal: any) => String(terminal.commerce)))]
+    const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${terminalCommerceIds.join('&ids[]=')}`)
+    const names = response.data.response
+
+    const terminalsCopy = JSON.parse(JSON.stringify(terminals))
+    for (const terminal of terminalsCopy) {
+      terminal.commerceName = names?.[String(terminal.commerce)]?.name ?? '-'
+    }
+    const data = { count, terminals: terminalsCopy }
+    return data
+  }
+
   async getTerminal (_id: string): Promise<typeof terminal> {
     if (typeof _id === 'undefined') throw new AppErrorResponse({ name: 'Faltó agregar ID para la terminal', statusCode: 400 })
 
     const terminal = await TerminalModel.findOne({ _id, active: true })
+      .select('serialNumber commerce franchise branchId name model status location "ID Terminal" internalCommerceId active id imeiTerminal imeiTwoTerminal chipSerialNumber chipTwoSerialNumber operativeMode')
+
+    if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
+
+    const populated = (await this.populateResults([terminal]))[0]
+    return populated
+  }
+
+  async getTerminalFranchise (franchiseId: string, _id: string): Promise<typeof terminal> {
+    if (typeof _id === 'undefined') throw new AppErrorResponse({ name: 'Faltó agregar ID para la terminal', statusCode: 400 })
+
+    const terminal = await TerminalModel.findOne({ _id, active: true, franchise: franchiseId })
       .select('serialNumber commerce franchise branchId name model status location "ID Terminal" internalCommerceId active id imeiTerminal imeiTwoTerminal chipSerialNumber chipTwoSerialNumber operativeMode')
 
     if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
@@ -182,6 +269,17 @@ class TerminalService {
     return count
   }
 
+  async createTerminalFranchise (franchiseId: string, data: IPostTerminal, session: ClientSession): Promise<typeof response> {
+    customLog(data)
+    const exists = await TerminalModel.findOne({ serialNumber: data.serialNumber, active: true })
+    if (exists != null) throw new AppErrorResponse({ name: `El numero de serie ya está ocupado ${String(exists._id)}`, statusCode: 409 })
+
+    const terminal = new TerminalModel({ ...data, franchise: new ObjectId(franchiseId) })
+    const savedTerminal = await terminal.save({ validateBeforeSave: true, session })
+    const response = { created: true, terminal: savedTerminal }
+    return response
+  }
+
   async create (data: IPostTerminal, session: ClientSession): Promise<typeof response> {
     customLog(data)
     const exists = await TerminalModel.findOne({ serialNumber: data.serialNumber, active: true })
@@ -191,6 +289,119 @@ class TerminalService {
     const savedTerminal = await terminal.save({ validateBeforeSave: true, session })
     const response = { created: true, terminal: savedTerminal }
     return response
+  }
+
+  async updateTerminalFranchise (franchiseId: string, body: UpdateTerminalDto, session: ClientSession): Promise<any> {
+    const { _id, ...updateFields } = body
+    customLog('updateData', body)
+    body.franchise = franchiseId
+
+    const allowedFields: Array<keyof UpdateTerminalDto> = [
+      'name', 'serialNumber', 'warehouseManager', 'systemChargeResponsible',
+      'arrivalTrackingGuide', 'parcelDistributor', 'arrivalDate', 'status',
+      'pending', 'active', 'model', 'chipSerialNumber', 'chipTwoSerialNumber',
+      'imeiTerminal', 'imeiTwoTerminal', 'commerce',
+      'operativeMode'
+    ]
+
+    for (const field in updateFields) {
+      if (!allowedFields.includes(field as keyof UpdateTerminalDto)) throw new AppErrorResponse({ statusCode: 403, name: `Campo no permitido: ${field}` })
+    }
+
+    const terminal = await TerminalModel.findOne({ _id, franchise: new ObjectId(franchiseId), active: true })
+    if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
+    const originalRecord = JSON.parse(JSON.stringify(terminal))
+
+    // Update commerce
+    if (body.commerce !== undefined && body.commerce !== originalRecord.commerce) {
+      if (body.commerce === null) {
+        terminal.location = (body.franchise !== null) ? ETerminalLocation.FRANCHISE : ETerminalLocation.WAREHOUSE
+        terminal.commerce = undefined
+      } else {
+        const response = await appProfilesInstance.get(`user/backoffice/getCommerces/?ids[]=${String(body.commerce)}`)
+        const commerce = response?.data?.response?.[String(body.commerce)]
+        if (commerce.franchiseId !== String(terminal.franchise)) throw new AppErrorResponse({ name: 'No se puede asignar a este comercio', statusCode: 403 })
+
+        let counter = await TerminalCounterModel.findOneAndUpdate({ commerce: body.commerce, active: true }, { $inc: { seq: 1 } })
+        if (counter == null) counter = await TerminalCounterModel.create({ commerce: body.commerce, seq: 0 })
+        terminal.location = ETerminalLocation.COMMERCE
+        terminal.internalCommerceId = counter.seq + 1
+        terminal.commerce = body.commerce as any
+        terminal.branchId = undefined
+        customLog(`Terminal asignada al comercio ${String(body.commerce)}\nSN: ${terminal.serialNumber}`)
+      }
+    }
+    // Update branch
+    if (body.branchId != null && body.branchId !== originalRecord.branchId) {
+      const response = await appProfilesInstance.get(`branch/backoffice/search/?commerceId=${String(terminal.commerce)}&size=small`)
+      const branches = response.data.response
+      const branchIds: any[] = branches?.map((x: any) => x._id) ?? []
+      if (!branchIds.includes(body.branchId)) throw new AppErrorResponse({ name: 'No se puede asignar a esta sucursal', statusCode: 403 })
+      customLog(`Terminal asignada a la sucursal ${String(body.branchId)}`)
+    }
+
+    for (const field in updateFields) {
+      const value = (updateFields as any)[field];
+      (terminal as any)[field] = value
+    }
+
+    await terminal.save({ validateBeforeSave: true, validateModifiedOnly: true, session })
+    return 'Success'
+  }
+
+  async updateTerminalAdvisor (advisorId: string, body: UpdateTerminalDto, session: ClientSession): Promise<any> {
+    const { _id, ...updateFields } = body
+    customLog('updateData', body)
+
+    const allowedFields: Array<keyof UpdateTerminalDto> = [
+      'branchId', 'commerce', 'operativeMode'
+    ]
+
+    for (const field in updateFields) {
+      if (!allowedFields.includes(field as keyof UpdateTerminalDto)) throw new AppErrorResponse({ statusCode: 403, name: `Campo no permitido: ${field}` })
+    }
+
+    const terminal = await TerminalModel.findOne({ _id, active: true })
+    if (terminal == null) throw new AppErrorResponse({ name: 'No se encontró la terminal', statusCode: 404 })
+    const originalRecord = JSON.parse(JSON.stringify(terminal))
+
+    const response = await appProfilesInstance.get(`user/backoffice/getCommerces/?ids[]=${String(terminal.commerce)}`)
+    const commerce = response?.data?.response?.[String(terminal.commerce)]
+    if (commerce.franchiseId !== String(terminal.franchise)) throw new AppErrorResponse({ name: 'No se puede asignar a este comercio', statusCode: 403 })
+    if (commerce.adviser !== advisorId) throw new AppErrorResponse({ name: 'No se puede asignar a este comercio*', statusCode: 403 })
+
+    // Update commerce
+    if (body.commerce !== undefined && body.commerce !== originalRecord.commerce) {
+      if (body.commerce === null) {
+        terminal.location = (body.franchise !== null) ? ETerminalLocation.FRANCHISE : ETerminalLocation.WAREHOUSE
+        terminal.commerce = undefined
+        terminal.commerceTpvManagerEmail = undefined
+      } else {
+        let counter = await TerminalCounterModel.findOneAndUpdate({ commerce: body.commerce, active: true }, { $inc: { seq: 1 } })
+        if (counter == null) counter = await TerminalCounterModel.create({ commerce: body.commerce, seq: 0 })
+        terminal.location = ETerminalLocation.COMMERCE
+        terminal.internalCommerceId = counter.seq + 1
+        terminal.commerce = body.commerce as any
+        terminal.branchId = undefined
+        customLog(`Terminal asignada al comercio ${String(body.commerce)}\nSN: ${terminal.serialNumber}`)
+      }
+    }
+    // Update branch
+    if (body.branchId != null && body.branchId !== originalRecord.branchId) {
+      const response = await appProfilesInstance.get(`branch/backoffice/search/?commerceId=${String(terminal.commerce)}&size=small`)
+      const branches = response.data.response
+      const branchIds: any[] = branches?.map((x: any) => x._id) ?? []
+      if (!branchIds.includes(body.branchId)) throw new AppErrorResponse({ name: 'No se puede asignar a esta sucursal', statusCode: 403 })
+      customLog(`Terminal asignada a la sucursal ${String(body.branchId)}`)
+    }
+
+    for (const field in updateFields) {
+      const value = (updateFields as any)[field];
+      (terminal as any)[field] = value
+    }
+
+    await terminal.save({ validateBeforeSave: true, validateModifiedOnly: true, session })
+    return 'Success'
   }
 
   async update (body: UpdateTerminalDto, session: ClientSession): Promise<any> {
@@ -291,6 +502,23 @@ class TerminalService {
 
   async generateOtp (serialNumber: string): Promise<any> {
     const terminal = await TerminalModel.findOne({ serialNumber, active: true, pending: false })
+    if (terminal == null) {
+      throw new AppErrorResponse({ name: 'Terminal no encontrada / en proceso de asignación', statusCode: 404 })
+    }
+
+    const currentTimestamp = Date.now()
+    const otpTimestamp = new Date(currentTimestamp + otpExpiresIn)
+    const otp = generateRandomString(otpLength, otpValidCharacters)
+
+    terminal.otpCode = hashString(otp)
+    terminal.otpExpiresAt = otpTimestamp.toISOString()
+    terminal.otpStatus = ETerminalOtpStatus.PENDING
+    await terminal.save({ validateBeforeSave: true, validateModifiedOnly: true })
+    return { otp }
+  }
+
+  async generateOtpFranchise (franchiseId: string, serialNumber: string): Promise<any> {
+    const terminal = await TerminalModel.findOne({ serialNumber, active: true, pending: false, franchise: franchiseId })
     if (terminal == null) {
       throw new AppErrorResponse({ name: 'Terminal no encontrada / en proceso de asignación', statusCode: 404 })
     }
