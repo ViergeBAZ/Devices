@@ -27,10 +27,49 @@ class TerminalController {
     }
   }
 
+  public async getTerminalsFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const query = req.query as IGetTerminalsQuery
+    const locals = res.locals
+    try {
+      const response = await terminalService.getTerminalsFranchise(locals.user._id, query)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getTerminalsAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    const query = req.query as IGetTerminalsQuery
+    const locals = res.locals
+    try {
+      const response = await terminalService.getTerminalsAdvisor(locals.user._id, query)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
   public async getTerminal (req: Request, res: Response): Promise<AppControllerResponse> {
     const id = req.params?.id
     try {
       const response = await terminalService.getTerminal(id)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async getTerminalFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const id = req.params?.id
+    const locals = res.locals
+    try {
+      const response = await terminalService.getTerminalFranchise(locals.user._id, id)
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
@@ -90,6 +129,25 @@ class TerminalController {
     }
   }
 
+  public async createTerminalFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const body = req.body as IPostTerminal
+    const session = await AppMongooseRepo.startSession()
+    const locals = res.locals
+
+    try {
+      session.startTransaction()
+      const response = await terminalService.createTerminalFranchise(locals.user._id, body, session)
+      await session.commitTransaction()
+      await session.endSession()
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      await session.abortTransaction()
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
   public async create (req: Request, res: Response): Promise<AppControllerResponse> {
     const body = req.body as IPostTerminal
     const session = await AppMongooseRepo.startSession()
@@ -102,6 +160,44 @@ class TerminalController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
+      await session.abortTransaction()
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async updateTerminalFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const body = req.body as UpdateTerminalDto
+    const session = await AppMongooseRepo.startSession()
+    const locals = res.locals
+    try {
+      session.startTransaction()
+      const response = await terminalService.updateTerminalFranchise(locals.user._id, body, session)
+      await session.commitTransaction()
+      await session.endSession()
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      console.log(error)
+      await session.abortTransaction()
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async updateTerminalAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    const body = req.body as UpdateTerminalDto
+    const session = await AppMongooseRepo.startSession()
+    const locals = res.locals
+    try {
+      session.startTransaction()
+      const response = await terminalService.updateTerminalAdvisor(locals.user._id, body, session)
+      await session.commitTransaction()
+      await session.endSession()
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      console.log(error)
       await session.abortTransaction()
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
@@ -161,6 +257,20 @@ class TerminalController {
 
     try {
       const response = await terminalService.generateOtp(body.serialNumber)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
+  public async generateOtpFranchise (req: Request, res: Response): Promise<AppControllerResponse> {
+    const body = req.body as GenerateOtpDto
+    const locals = res.locals
+
+    try {
+      const response = await terminalService.generateOtpFranchise(locals.user._id, body.serialNumber)
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
