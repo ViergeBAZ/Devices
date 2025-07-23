@@ -274,7 +274,7 @@ class TerminalService {
     const exists = await TerminalModel.findOne({ serialNumber: data.serialNumber, active: true })
     if (exists != null) throw new AppErrorResponse({ name: `El numero de serie ya está ocupado ${String(exists._id)}`, statusCode: 409 })
 
-    const terminal = new TerminalModel({ ...data, franchise: new ObjectId(franchiseId) })
+    const terminal = new TerminalModel({ ...data, franchise: new ObjectId(franchiseId), location: ETerminalLocation.FRANCHISE })
     const savedTerminal = await terminal.save({ validateBeforeSave: true, session })
     const response = { created: true, terminal: savedTerminal }
     return response
@@ -315,7 +315,7 @@ class TerminalService {
     // Update commerce
     if (body.commerce !== undefined && body.commerce !== originalRecord.commerce) {
       if (body.commerce === null) {
-        terminal.location = (body.franchise !== null) ? ETerminalLocation.FRANCHISE : ETerminalLocation.WAREHOUSE
+        terminal.location = ETerminalLocation.FRANCHISE
         terminal.commerce = undefined
       } else {
         const response = await appProfilesInstance.get(`user/backoffice/getCommerces/?ids[]=${String(body.commerce)}`)
