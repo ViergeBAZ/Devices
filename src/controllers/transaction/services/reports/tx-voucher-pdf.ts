@@ -199,9 +199,9 @@ function translateReadMode (code: string): string {
     case '80':
       return 'Fallback'
     case '05':
-      return 'Tarjeta EMV'
+      return 'Autorizado con Chip + NIP'
     case '07':
-      return 'Contactless EMV'
+      return 'Autorizado sin contacto'
     default:
       return 'Desconocido'
   }
