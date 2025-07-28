@@ -43,6 +43,7 @@ class UserRoutes extends ServerRouter {
     this.router.post('/franchise/generateOtp', [franchiseMiddleware, validateReq(GenerateOtpDto)], terminalController.generateOtpFranchise as RequestHandler)
     // Advisor
     this.router.get('/advisor', [advisorMiddleware], terminalController.getTerminalsAdvisor as RequestHandler)
+    this.router.get('/advisor/getTerminalById/:id', [advisorMiddleware], terminalController.getTerminalAdvisor as RequestHandler)
     this.router.patch('/advisor/update', [advisorMiddleware, validateReq(UpdateTerminalDto)], terminalController.updateTerminalAdvisor as RequestHandler)
 
     this.router.post('/tpvLogin', [validateReq(TpvLoginDto)], terminalController.tpvLogin as RequestHandler)

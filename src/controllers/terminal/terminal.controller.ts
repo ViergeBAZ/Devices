@@ -78,6 +78,19 @@ class TerminalController {
     }
   }
 
+  public async getTerminalAdvisor (req: Request, res: Response): Promise<AppControllerResponse> {
+    const id = req.params?.id
+    const locals = res.locals
+    try {
+      const response = await terminalService.getTerminalAdvisor(locals.user._id, id)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
   public async searchTerminals (req: Request, res: Response): Promise<AppControllerResponse> {
     const query = req.query as IGetSearchTerminals
     try {

@@ -1,10 +1,5 @@
 import { type Types } from '@app/repositories/mongoose'
 
-export interface IRefreshToken {
-  refreshToken: string
-  expiryDate: Date
-}
-
 export interface IUserTokenPayload {
   _id: Types.ObjectId | string
   commerceId: string
