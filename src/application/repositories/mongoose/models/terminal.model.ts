@@ -26,7 +26,6 @@ export const TerminalSchema = new Schema<ITerminal>({
   'ID Terminal': { type: String },
   internalCommerceId: { type: Number },
   operativeMode: { type: String, enum: EOperativeMode, default: EOperativeMode.RETAIL },
-  commerceTpvManagerEmail: { type: String },
   /* auth */
   apiKey: { type: String },
   passcode: { type: String },

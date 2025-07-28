@@ -16,3 +16,12 @@ export async function getCommercesByField<T extends string> (field: string, valu
 
   return commerces
 }
+
+export async function getAdvisor<T extends string> (advisorId: string): Promise<Record<T, any>> {
+  const response = await appProfilesInstance.get(`advisor/backoffice/${advisorId}`)
+  const advisor = response?.data?.response
+
+  if (advisor == null) throw new AppErrorResponse({ name: 'No se encontró el asesor', statusCode: 404, isOperational: true })
+
+  return advisor
+}

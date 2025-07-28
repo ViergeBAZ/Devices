@@ -22,6 +22,14 @@ export function customLog (...payloads: any[]): void {
   console.log(`[${stringDate}]:`, ...payloads)
 }
 
+export function arrayToObject (array: any, keyField: string): any {
+  const result: any = {}
+  for (const item of array) {
+    result[item[keyField]] = item
+  }
+  return result
+}
+
 export function concatObjs (objetos: any[]): any {
   const resultado: any = {}
 
