@@ -11,7 +11,7 @@ export async function getCommerce<T extends string> (commerceId: string, fields:
 }
 
 export async function getCommercesByField<T extends string> (field: string, value: any, fields: T[]): Promise<Array<Record<T, any>>> {
-  const response = await appProfilesInstance.get(`user/backoffice/search?${field}=${value as string}&fields[]=${fields.join('&fields[]=')}`)
+  const response = await appProfilesInstance.get(`user/backoffice/search?limit=99999&${field}=${value as string}&fields[]=${fields.join('&fields[]=')}`)
   const commerces = response?.data?.response ?? []
 
   return commerces
