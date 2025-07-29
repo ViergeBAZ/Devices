@@ -46,18 +46,13 @@ class TerminalService {
     const start = Number(query?.start ?? 0)
     const limit = (end !== 0) ? end - start : 10
 
-    const filter = query.filter
-    const queryFilter = { location: filter, franchise: new ObjectId(franchiseId), active: true }
-    const count = await TerminalModel.count(queryFilter)
+    const filter = { location: query.filter, franchise: franchiseId, active: true }
 
-    const terminals = await TerminalModel.find(queryFilter, undefined, {
-      skip: start, limit
-    }).select('serialNumber commerce status id name model')
-
-    const resume = await TerminalModel.aggregate()
-      .match(queryFilter)
-      .group({ _id: '$name', total: { $sum: 1 } })
-      .exec()
+    const [count, terminals, resume] = await Promise.all([
+      TerminalModel.countDocuments(filter),
+      TerminalModel.find(filter).select('serialNumber commerce status id name model').skip(start).limit(limit).lean(),
+      TerminalModel.aggregate().match(filter).group({ _id: '$name', total: { $sum: 1 } })
+    ])
 
     const commerceIds = [...new Set(terminals.map((terminal: any) => String(terminal.commerce)))]
     const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
@@ -84,12 +79,21 @@ class TerminalService {
     const commerceIds = [...new Set(filteredCommerces.map((commerce: any) => String(commerce._id)))]
     const commercesObj = arrayToObject(filteredCommerces, '_id')
 
-    const queryFilter = { location: query.filter, commerce: { $in: commerceIds }, active: true }
-    const count = await TerminalModel.count(queryFilter)
+    const filter = {
+      location: query.filter,
+      $or: [
+        { commerce: { $in: commerceIds } },
+        { commerce: { $exists: false } },
+        { commerce: null }
+      ],
+      franchise: advisor.franchiseId,
+      active: true
+    }
 
-    const terminals = await TerminalModel.find(queryFilter, undefined, {
-      skip: start, limit
-    }).select('serialNumber commerce status id name model')
+    const [count, terminals] = await Promise.all([
+      TerminalModel.countDocuments(filter),
+      TerminalModel.find(filter).select('serialNumber commerce status id name model').skip(start).limit(limit).lean()
+    ])
 
     const terminalsCopy = JSON.parse(JSON.stringify(terminals))
     for (const terminal of terminalsCopy) {
@@ -292,11 +296,7 @@ class TerminalService {
     body.franchise = franchiseId
 
     const allowedFields: Array<keyof UpdateTerminalDto> = [
-      'name', 'serialNumber', 'warehouseManager', 'systemChargeResponsible',
-      'arrivalTrackingGuide', 'parcelDistributor', 'arrivalDate', 'status',
-      'pending', 'active', 'model', 'chipSerialNumber', 'chipTwoSerialNumber',
-      'imeiTerminal', 'imeiTwoTerminal', 'commerce',
-      'operativeMode'
+      'branchId', 'commerce', 'operativeMode'
     ]
 
     for (const field in updateFields) {
