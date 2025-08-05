@@ -550,10 +550,10 @@ class TerminalService {
     const commerce = await getCommerce(String(terminal.commerce), ['email'])
     const commerceEmail = commerce.email
 
-    if (commerceEmail != null && commerceEmail !== '') {
-      const template = resetTpvPasscodeTemplate({ serialNumber: terminal.serialNumber, passcode: otp })
-      await appSendEmail(commerceEmail, '[TPV] Codigo de verificación restablecido', template)
-    }
+    // if (commerceEmail != null && commerceEmail !== '') {
+    //   const template = resetTpvPasscodeTemplate({ serialNumber: terminal.serialNumber, passcode: otp })
+    //   await appSendEmail(commerceEmail, '[TPV] Codigo de verificación restablecido', template)
+    // }
 
     return { apiKey, passcode: otp }
   }
