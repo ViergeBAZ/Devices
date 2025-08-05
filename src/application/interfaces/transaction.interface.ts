@@ -207,6 +207,7 @@ export interface ITransaction {
   readMode: string
   origin: string
   txnReference: string
+  has_signature?: boolean
   /* refunds */
   refundPairId: string
   /* backup */
