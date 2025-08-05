@@ -190,6 +190,7 @@ export const TransactionSchema = new Schema<ITransaction, Record<string, unknown
   readMode: { type: String },
   origin: { type: String },
   txnReference: { type: String },
+  has_signature: { type: Boolean, default: false },
   /* refunds */
   refundPairId: { type: String },
   /* backup */
