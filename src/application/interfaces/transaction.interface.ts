@@ -39,7 +39,9 @@ export enum ETransactionStatus {
 
 export enum EOperationType {
   SALE = 'sale',
-  REFUND = 'refund'
+  REFUND = 'refund',
+  REVERSED = 'reversed',
+  CANCELLED = 'cancelled'
 }
 
 export enum ESaleType {

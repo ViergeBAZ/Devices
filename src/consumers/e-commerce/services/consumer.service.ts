@@ -4,7 +4,7 @@ import { TerminalModel, TransactionModel } from '@app/repositories/mongoose/mode
 import { messageHandler } from '@app/handlers/kafka'
 /* dtos */
 import type { KafkaMessage } from 'kafkajs'
-import { EDepositStatus, ETefStatus, ETransactionStatus, ETransactionType } from '@app/interfaces/transaction.interface'
+import { EDepositStatus, EOperationType, ETefStatus, ETransactionStatus, ETransactionType } from '@app/interfaces/transaction.interface'
 import { appSendEmail } from '@app/utils/mail.util'
 import { getStringDate } from '@app/utils/date.util'
 import { excelReportRecipients } from '@app/constants/mail.constants'
@@ -40,6 +40,7 @@ export class ConsumerService {
     const ISOCodeDescription = fields['ISO CODE DESCRIPTION']
     const status = fields.status
     const transactionStatus = fields.transactionStatus as ETransactionStatus
+    const operationType = fields.operationType as EOperationType
     const depositStatus = (['00', '000', '001'].includes(ISOCode) && [ETransactionStatus.APPROVED, ETransactionStatus.REFUND].includes(transactionStatus)) ? EDepositStatus.PENDING : EDepositStatus.NA
     const processorId = fields.processorId
 
@@ -57,6 +58,7 @@ export class ConsumerService {
       'ISO CODE DESCRIPTION': ISOCodeDescription,
       status,
       transactionStatus,
+      operationType,
       depositStatus,
       tefStatus: fields.tefStatus ?? tefStatus,
       processorId,
