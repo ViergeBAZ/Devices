@@ -4,6 +4,7 @@ import { ETransactionStatus, type ITransaction } from '@app/interfaces/transacti
 import axios from 'axios'
 import { cancelledImgPath, approvedImgPath, companyLogo, declinedImgPath, refundImgPath, unknownImgPath } from '@app/constants/default-values'
 import fs from 'fs'
+import { TransactionSignatureModel } from '@app/repositories/mongoose/models-transactions/transaction-signature.model'
 
 interface Commercial {
   address: string
@@ -19,12 +20,35 @@ async function fetchImageBuffer (url: string): Promise<Buffer> {
   return Buffer.from(response.data)
 }
 
+async function getTransactionSignature (transactionId: string): Promise<Buffer | null> {
+  try {
+    const signature = await TransactionSignatureModel.findOne({
+      transaction_id: transactionId
+    }).lean()
+
+    if (signature?.signature != null) {
+      return signature.signature
+    }
+
+    return null
+  } catch (error) {
+    console.warn('Error al obtener la firma de la transacción:', error)
+    return null
+  }
+}
+
 export async function createTxVoucherPdf (transaction: ITransaction, commerce: any): Promise<Buffer> {
   let logoBuffer: Buffer | null
   try {
     logoBuffer = await fetchImageBuffer(companyLogo)
   } catch (err) {
     console.warn('No se pudo cargar el logo remoto:', err)
+  }
+
+  // Obtener la firma si la transacción tiene signature flag
+  let signatureBuffer: Buffer | null = null
+  if (transaction.has_signature === true) {
+    signatureBuffer = await getTransactionSignature(transaction['ID Transaction'])
   }
 
   return await new Promise((resolve, reject) => {
@@ -114,6 +138,32 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     drawRow('ARQC:', extractARQC(transaction.tlv) ?? '-----')
     drawRow('AUTORIZADO:', translateReadMode(transaction.readMode))
     doc.y = posY
+
+    // Agregar firma si existe
+    if (signatureBuffer != null) {
+      posY += 20
+      doc.fontSize(10)
+      doc.text('Firma del cliente:', startX, posY)
+      posY += 15
+
+      try {
+        // Centrar la firma en la página
+        const signatureWidth = 120
+        const signatureHeight = 60
+        const signatureX = (pageWidth - signatureWidth) / 2
+
+        doc.image(signatureBuffer, signatureX, posY, {
+          width: signatureWidth,
+          height: signatureHeight
+        })
+
+        posY += signatureHeight + 10
+      } catch (error) {
+        console.warn('Error al agregar la firma al PDF:', error)
+        doc.text('Error al cargar la firma', startX, posY)
+        posY += 15
+      }
+    }
 
     doc.end()
   })
