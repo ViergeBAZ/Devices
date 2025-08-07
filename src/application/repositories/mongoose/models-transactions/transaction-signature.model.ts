@@ -5,13 +5,13 @@ const { Schema } = mongoose
 export interface ITransactionSignature {
   _id: mongoose.Types.ObjectId
   transaction_id: string
-  signature: string
+  signature: Buffer
   created_at: Date
 }
 
 const TransactionSignatureSchema = new Schema<ITransactionSignature>({
   transaction_id: { type: String, required: true, index: true },
-  signature: { type: String, required: true },
+  signature: { type: Buffer, required: true },
   created_at: { type: Date, default: Date.now }
 }, {
   collection: 'transaction_signature'

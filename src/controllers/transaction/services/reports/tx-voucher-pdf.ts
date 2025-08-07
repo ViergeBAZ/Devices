@@ -26,10 +26,8 @@ async function getTransactionSignature (transactionId: string): Promise<Buffer |
       transaction_id: transactionId
     }).lean()
 
-    if (signature?.signature != null && signature.signature.trim() !== '') {
-      // Remover el prefijo "data:image/jpeg;base64," si existe
-      const base64Data = signature.signature.replace(/^data:image\/[a-z]+;base64,/, '')
-      return Buffer.from(base64Data, 'base64')
+    if (signature?.signature != null) {
+      return signature.signature
     }
 
     return null
