@@ -20,19 +20,39 @@ async function fetchImageBuffer (url: string): Promise<Buffer> {
   return Buffer.from(response.data)
 }
 
+// Función simplificada para extraer imagen desde MongoDB Binary
+function extractSignatureImage (data: any): Buffer | null {
+  try {
+    // Crear buffer directamente desde MongoDB Binary
+    const buffer = Buffer.from(data.buffer)
+
+    // Buscar header JPEG en las primeras posiciones (siempre está en posición 15)
+    for (let i = 0; i < Math.min(buffer.length - 2, 50); i++) {
+      if (buffer[i] === 0xFF && buffer[i + 1] === 0xD8) {
+        return buffer.subarray(i)
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error extracting signature image:', error)
+    return null
+  }
+}
+
 async function getTransactionSignature (transactionId: string): Promise<Buffer | null> {
   try {
     const signature = await TransactionSignatureModel.findOne({
       transaction_id: transactionId
     }).lean()
 
-    if (signature?.signature != null) {
-      return signature.signature
+    if (signature?.signature?.buffer != null) {
+      return extractSignatureImage(signature.signature)
     }
 
     return null
   } catch (error) {
-    console.warn('Error al obtener la firma de la transacción:', error)
+    console.error(`[TX:${transactionId}] Error al obtener la firma:`, error)
     return null
   }
 }
@@ -147,19 +167,19 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
       posY += 15
 
       try {
-        // Centrar la firma en la página
+        // Definir dimensiones de la firma
         const signatureWidth = 120
         const signatureHeight = 60
         const signatureX = (pageWidth - signatureWidth) / 2
 
+        // Usar la imagen extraída directamente (ya viene procesada desde getTransactionSignature)
         doc.image(signatureBuffer, signatureX, posY, {
           width: signatureWidth,
           height: signatureHeight
         })
-
         posY += signatureHeight + 10
       } catch (error) {
-        console.warn('Error al agregar la firma al PDF:', error)
+        console.error('Error al agregar la firma al PDF:', error instanceof Error ? error.message : String(error))
         doc.text('Error al cargar la firma', startX, posY)
         posY += 15
       }
