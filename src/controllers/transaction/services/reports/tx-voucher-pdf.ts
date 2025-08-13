@@ -156,7 +156,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     drawRow('Secuencia:', extractSequence(transaction.tlv) ?? '-----')
     drawRow('AID:', extractAID(transaction.tlv) ?? '-----')
     drawRow('ARQC:', extractARQC(transaction.tlv) ?? '-----')
-    drawRow('AUTORIZADO:', translateReadMode(transaction.readMode))
+    drawRow('AUTORIZADO:', translateReadMode(transaction.readMode, signatureBuffer != null))
     doc.y = posY
 
     // Agregar firma si existe
@@ -262,16 +262,16 @@ function extractSequence (tlv: string | undefined): string | undefined {
   return tlv.substr(index + 6, len * 2)
 }
 
-function translateReadMode (code: string): string {
+function translateReadMode (code: string, hasSignature: boolean = false): string {
   switch (code) {
     case '01':
       return 'Tarjeta digitada'
     case '80':
       return 'Fallback'
     case '05':
-      return 'Autorizado con Chip + NIP'
+      return hasSignature ? 'Chip + firma' : 'Autorizado con Chip + NIP'
     case '07':
-      return 'Autorizado sin contacto'
+      return hasSignature ? 'Autorizado con firma' : 'Autorizado sin contacto'
     default:
       return 'Desconocido'
   }
