@@ -11,7 +11,6 @@ import { concatObjs, sumField } from '@app/utils/util.util'
 import { appProfilesInstance } from '@app/repositories/axios'
 import { AppErrorResponse } from '@app/models/app.response'
 import { type ITerminal } from '@app/interfaces/terminal.interface'
-import { TransactionModelTransaction } from '@app/repositories/mongoose/models-transactions/transaction.transaction.model'
 import { getCommerce } from '@app/utils/db.util'
 import { createTxVoucherPdf } from '../reports/tx-voucher-pdf'
 import { type GetTxReportDto } from '../dtos/get-tx-report.dto'
@@ -652,7 +651,7 @@ export class TransactionReportService {
     if (commerce != null && commerce !== 'all') {
       filter.commerce = new mongoose.Types.ObjectId(commerce)
     }
-    const transactions = await TransactionModelTransaction.aggregate([
+    const transactions = await TransactionModel.aggregate([
       { $match: filter },
       { $sort: { 'Transaction Date': -1, 'Transaction Time': -1 } },
       {
@@ -668,9 +667,9 @@ export class TransactionReportService {
           'Producto Bancario': '$bankProduct',
           'Modo de Entrada': '$readMode',
           RRN: { $toString: { $arrayElemAt: ['$MIT Fields.37', 0] } },
-          Monto: { $divide: [{ $toDouble: '$Amount' }, 100] },
+          Monto: '$Amount',
           Cashback: { $divide: [{ $toDouble: '$tip' }, 100] },
-          Subtotal: { $round: [{ $abs: { $subtract: [{ $divide: [{ $toDouble: '$Amount' }, 100] }, { $divide: [{ $toDouble: '$tip' }, 100] }] } }, 2] },
+          Subtotal: { $round: [{ $abs: { $subtract: [{ $toDouble: '$Amount' }, { $divide: [{ $toDouble: '$tip' }, 100] }] } }, 2] },
           'Codigo de Respuesta': '$ISO CODE RESPONSE',
           Descripcion: '$ISO CODE DESCRIPTION',
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
