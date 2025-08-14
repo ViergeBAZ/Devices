@@ -732,6 +732,11 @@ class TransactionService extends TransactionResumeService {
     const end = query.end ?? 10
     const limit = (end !== 0) ? end - start : 10
 
+    // Filtros opcionales
+    const rrn = query?.rrn != null ? query?.rrn : null
+    const authorizationNumber = query?.authorizationNumber != null ? query?.authorizationNumber : null
+    const amount = query?.amount != null ? query?.amount : null
+
     // Filtros default
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
@@ -741,6 +746,17 @@ class TransactionService extends TransactionResumeService {
     // Si el id del comercío no es 'all', undefined o null se filtra por el id del comercio
     if (query.commerce != null && query.commerce !== 'all') {
       filter.commerce = query.commerce
+    }
+
+    // Filtros opcionales
+    if (rrn != null) {
+      filter['ID Transaction'] = rrn
+    }
+    if (authorizationNumber != null) {
+      filter['MIT Fields'] = { $elemMatch: { 38: authorizationNumber } }
+    }
+    if (amount != null) {
+      filter.Amount = { $eq: parseFloat(amount) }
     }
 
     const transactions = await TransactionModel
