@@ -86,11 +86,16 @@ export class AppServer {
   }
 
   routes (): void {
-    this.app.use('/api/terminal', terminalRoutes)
-    this.app.use('/api/simcard', simcardRoutes)
-    this.app.use('/api/transaction', transactionRoutes)
-    this.app.use('/api/catalog', catalogRoutes)
-    this.app.use('/api/server', serverRoutes)
+    const apiRouter = express.Router();
+
+    apiRouter.use('/terminal', terminalRoutes)
+    apiRouter.use('/simcard', simcardRoutes)
+    apiRouter.use('/transaction', transactionRoutes)
+    apiRouter.use('/catalog', catalogRoutes)
+    apiRouter.use('/server', serverRoutes)
+
+    this.app.use('/api', apiRouter)
+    this.app.use(process.env.PREFIJO_URL + '/api', apiRouter)
   }
 
   getAvailableRoutes (): void {
