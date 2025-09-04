@@ -80,21 +80,27 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
 
     // Logo
     if (logoBuffer != null) {
-      doc.image(logoBuffer, 70, undefined, { width: 160 }).moveDown()
+      doc.image(logoBuffer, 85, undefined, { width: 120 })
+      doc.moveDown(0.3)
     }
     // Título
-    doc.fontSize(14).text('Ticket digital de venta', { align: 'center' }).moveDown()
+    doc.fontSize(14).text('Ticket digital de venta', { align: 'center' })
+    doc.moveDown(0.5)
 
     // Comercio
     const commercial = commerce.commercial as Commercial
     const fullAddress = formatCommercialAddress(commercial)
     doc.fontSize(10)
     doc.text(commerce.financial?.businessName?.toUpperCase(), { align: 'center' })
+    doc.moveDown(0.2)
     doc.text(fullAddress?.toUpperCase(), { align: 'center' })
-    if (commerce.address != null) doc.text(commerce.address, { align: 'center' })
-    doc.moveDown()
+    if (commerce.address != null) {
+      doc.moveDown(0.2)
+      doc.text(commerce.address, { align: 'center' })
+    }
+    doc.moveDown(0.2)
     doc.text(`Número de afiliación: ${transaction['Afiliate Number']}`, { align: 'center' })
-    doc.moveDown()
+    doc.moveDown(0.5)
 
     const startX = doc.x
     let posY = doc.y
