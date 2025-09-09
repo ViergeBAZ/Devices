@@ -253,6 +253,19 @@ class TerminalController {
     }
   }
 
+  public async setKeyId (req: Request, res: Response): Promise<AppControllerResponse> {
+    const body = req.body
+
+    try {
+      const response = await terminalService.setKeyId(body.serialNumber, body.keyId)
+      const result = appSuccessResponseHandler('success', response)
+      return res.status(200).json(result)
+    } catch (error) {
+      const { statusCode, error: err } = appErrorResponseHandler(error)
+      return res.status(statusCode).json(err)
+    }
+  }
+
   public async tpvLogin (req: Request, res: Response): Promise<AppControllerResponse> {
     const body = req.body as TpvLoginDto
     try {

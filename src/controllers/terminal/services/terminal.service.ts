@@ -155,7 +155,7 @@ class TerminalService {
     }
 
     const terminals = await TerminalModel.find(filter)
-      .select({ serialNumber: 1, commerce: 1, franchise: 1, name: 1, model: 1, status: 1, location: 1, internalCommerceId: 1, active: 1, id: 1, imeiTerminal: 1, imeiTwoTerminal: 1, chipSerialNumber: 1, chipTwoSerialNumber: 1, branchId: 1, 'ID Terminal': 1 })
+      .select({ serialNumber: 1, commerce: 1, franchise: 1, name: 1, model: 1, status: 1, location: 1, internalCommerceId: 1, active: 1, id: 1, imeiTerminal: 1, imeiTwoTerminal: 1, chipSerialNumber: 1, chipTwoSerialNumber: 1, branchId: 1, 'ID Terminal': 1, keyId: 1 })
       .limit(limit)
 
     if (terminals.length === 0) throw new AppErrorResponse({ name: 'No se encontraron terminales', statusCode: 404 })
@@ -577,6 +577,15 @@ class TerminalService {
     await appSendEmail(commerceEmail, '[TPV] Codigo de verificación restablecido', template)
 
     return { passcode: newPasscode }
+  }
+
+  async setKeyId (serialNumber: string, keyId: string): Promise<boolean> {
+    const result = await TerminalModel.updateOne(
+      { serialNumber },
+      { keyId }
+    )
+
+    return result.modifiedCount > 0
   }
 
   async deleteTerminal (id: string): Promise<ITerminal> {

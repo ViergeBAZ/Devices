@@ -65,6 +65,7 @@ export interface ITerminal {
   'ID Terminal': string
   internalCommerceId: number
   operativeMode: EOperativeMode
+  keyId: string
   /* auth */
   apiKey: string
   passcode: string

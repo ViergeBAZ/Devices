@@ -29,6 +29,7 @@ class UserRoutes extends ServerRouter {
     this.router.post('/assignApiKeyWithOtp', [validateReq(AssingApiKeyWOtpDto)], terminalController.assignApiKeyWithOtp as RequestHandler)
     this.router.post('/resetApiKey', [backofficeMiddleware, validateReq(ResetApiKeyDto)], terminalController.resetApiKey as RequestHandler)
     this.router.get('/searchTerminals', [backofficeMiddleware], terminalController.searchTerminals as RequestHandler)
+    this.router.post('/setKeyId', [backofficeMiddleware], terminalController.setKeyId as RequestHandler)
 
     this.router.post('/commerce/resetPasscode', [commerceMiddleware], terminalController.resetPasscode as RequestHandler)
 
