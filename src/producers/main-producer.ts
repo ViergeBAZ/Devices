@@ -1,13 +1,15 @@
 /* dtos */
+import { brokerTopicPrefix } from '@app/constants/default-values'
 import type { Message, RecordMetadata } from 'kafkajs'
 import { Kafka } from 'kafkajs'
 
 const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID?? '',
+  clientId: process.env.KAFKA_CLIENT_ID ?? '',
   brokers: [process.env.KAFKA_SERVER ?? '']
 })
 
 const appMainProducer = kafka.producer()
+const topic = brokerTopicPrefix + 'devices.deposits'
 
 class MainProducer {
   async connect (): Promise<void> {
@@ -20,7 +22,7 @@ class MainProducer {
 
   async send (messages: Message[]): Promise<RecordMetadata[]> {
     console.log('kafka msg', messages)
-    return await appMainProducer.send({ topic: 'devices.deposits', messages })
+    return await appMainProducer.send({ topic, messages })
   }
 }
 const mainProducer: MainProducer = new MainProducer()
