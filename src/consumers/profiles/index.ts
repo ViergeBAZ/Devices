@@ -1,12 +1,14 @@
+import { brokerTopicPrefix } from '@app/constants/default-values'
 import consumerController from './consumer.controller'
 import { Kafka } from 'kafkajs'
 
 const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID?? '',
+  clientId: process.env.KAFKA_CLIENT_ID ?? '',
   brokers: [process.env.KAFKA_SERVER ?? '']
 })
 
 export const appProfilesConsumer = kafka.consumer({ groupId: 'development.profile.devices' })
+const topic = brokerTopicPrefix + 'profile.devices'
 
 class ProfilesConsumer {
   async init (): Promise<void> {
@@ -23,7 +25,7 @@ class ProfilesConsumer {
   }
 
   private async subscribe (): Promise<void> {
-    await appProfilesConsumer.subscribe({ topic: 'profile.devices', fromBeginning: true })
+    await appProfilesConsumer.subscribe({ topic, fromBeginning: true })
   }
 
   private async streamMessages (): Promise<void> {
