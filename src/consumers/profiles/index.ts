@@ -1,12 +1,9 @@
+import { createKafka } from '@app/utils/kafka.util'
 import consumerController from './consumer.controller'
-import { Kafka } from 'kafkajs'
 
-const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID?? '',
-  brokers: [process.env.KAFKA_SERVER ?? '']
-})
+const kafka = createKafka()
 
-export const appProfilesConsumer = kafka.consumer({ groupId: 'development.profile.devices' })
+export const appProfilesConsumer = kafka.consumer({ groupId: 'devices.profile' })
 
 class ProfilesConsumer {
   async init (): Promise<void> {

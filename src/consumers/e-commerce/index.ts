@@ -1,12 +1,9 @@
+import { createKafka } from '@app/utils/kafka.util'
 import consumerController from './consumer.controller'
-import { Kafka } from 'kafkajs'
 
-const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID?? '',
-  brokers: [process.env.KAFKA_SERVER ?? '']
-})
+const kafka = createKafka()
 
-const appDepositsConsumer = kafka.consumer({ groupId: 'development.e-commerce.devices' })
+const appDepositsConsumer = kafka.consumer({ groupId: 'devices.devices' })
 
 class DepositsConsumer {
   async init (): Promise<void> {

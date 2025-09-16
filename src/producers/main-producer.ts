@@ -1,11 +1,9 @@
 /* dtos */
+import { createKafka } from '@app/utils/kafka.util'
 import type { Message, RecordMetadata } from 'kafkajs'
 import { Kafka } from 'kafkajs'
 
-const kafka = new Kafka({
-  clientId: process.env.KAFKA_CLIENT_ID?? '',
-  brokers: [process.env.KAFKA_SERVER ?? '']
-})
+const kafka = createKafka()
 
 const appMainProducer = kafka.producer()
 
