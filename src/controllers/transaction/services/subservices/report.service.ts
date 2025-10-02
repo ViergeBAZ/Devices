@@ -649,7 +649,7 @@ export class TransactionReportService {
       'Transaction Date': { $gte: startDate, $lte: endDate }
     }
     if (commerce != null && commerce !== 'all') {
-      filter.commerce = new mongoose.Types.ObjectId(commerce)
+      filter.commerce = commerce
     }
     const transactions = await TransactionModel.aggregate([
       { $match: filter },
