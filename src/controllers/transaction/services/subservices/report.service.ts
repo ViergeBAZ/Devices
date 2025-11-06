@@ -646,7 +646,8 @@ export class TransactionReportService {
     const commerce = query?.commerce != null ? query?.commerce : null
 
     const filter: FilterQuery<ITransaction> = {
-      'Transaction Date': { $gte: startDate, $lte: endDate }
+      'Transaction Date': { $gte: startDate, $lte: endDate },
+      active: true
     }
     if (commerce != null && commerce !== 'all') {
       filter.commerce = commerce
@@ -721,7 +722,8 @@ export class TransactionReportService {
       })
     }
     const filter: FilterQuery<ITransaction> = {
-      'Transaction Date': { $gte: startDate }
+      'Transaction Date': { $gte: startDate },
+      active: true
     }
     if (commerce != null) {
       filter.commerce = commerce
