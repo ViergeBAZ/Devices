@@ -472,7 +472,7 @@ class TransactionService extends TransactionResumeService {
 
   async getAdvisorAmount (body: []): Promise<any> {
     const result = await Promise.all(body.map(async (e: any) => {
-      const transactions = await TransactionModel.find({ commerce: e._id })
+      const transactions = await TransactionModel.find({ commerce: e._id, active: true })
       return transactions
     }))
 
@@ -718,6 +718,7 @@ class TransactionService extends TransactionResumeService {
     }
     if (queryFilter === 'urgent') filter['Card Type'] = { $ne: 'international' }
 
+    filter.active = true
     const filteredTransactions = await TransactionModel.find(filter).select({ epn: 0 })
     const filtered = filteredTransactions.filter((e) => e.toDeposit > e.deposited).filter((e) => this.checkTransactionReadyToDisperse(e, endDate))
     const total = filtered.reduce((accumulator, e) => accumulator + e.toDeposit - e.deposited, 0)
@@ -802,7 +803,7 @@ class TransactionService extends TransactionResumeService {
   }
 
   async getTransactionByIdBackoffice (transactionId: string): Promise<any> {
-    const transaction = await TransactionModel.findOne({ _id: transactionId })
+    const transaction = await TransactionModel.findOne({ _id: transactionId, active: true })
     if (transaction == null) throw new AppErrorResponse({ name: 'No se encontró la transacción', statusCode: 404 })
     const populated = (await this.populateResults([transaction]))[0]
     return populated
