@@ -9,17 +9,23 @@ export function sumField (array: any[], key: string): number {
 }
 
 export function customLog (...payloads: any[]): void {
-  const currentDate = new Date()
-  const stringDate = new Intl.DateTimeFormat('es', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).format(currentDate)
-  console.log(`[${stringDate}]:`, ...payloads)
+  //Obtiene la bandera del ambiente
+  const env = process.env.ENV
+
+  //Si el ambiente es de desarrollo, imprime el log
+  if(env === 'development'){
+    const currentDate = new Date()
+    const stringDate = new Intl.DateTimeFormat('es', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(currentDate)
+    console.log(`[${stringDate}]:`, ...payloads)
+  }
 }
 
 export function arrayToObject (array: any, keyField: string): any {

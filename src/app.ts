@@ -30,6 +30,7 @@ import simcardRoutes from '@routes/simcard.routes'
 import mainProducer from '@producers/main-producer'
 import { appTiempoRetencion } from './cronjobs/cronjob.controller'
 import serverRoutes from '@routes/server.routes'
+import { customLog } from '@app/utils/util.util'
 
 /* app class */
 export class AppServer {
@@ -73,7 +74,7 @@ export class AppServer {
       await depositsConsumer.start()
     } catch (error) {
       Winston.error(String(error))
-      console.log(error)
+      customLog(error)
     }
   }
 
@@ -102,12 +103,12 @@ export class AppServer {
     this.app._router.stack.forEach((middleware: ExpressMiddleware) => {
       if (middleware.route != null) { // routes registered directly on the app
         const handler: RequestHandler = middleware.handle as RequestHandler
-        console.log(middleware.route.path, handler)
+        customLog(middleware.route.path, handler)
       } else if (middleware.name === 'router') { // router middleware
         const router: Router = middleware.handle as Router
-        console.log(middleware)
+        customLog(middleware)
         router.stack.forEach((handler: any) => {
-          if (typeof handler.route !== 'undefined') console.log(handler.route.path, handler.route.methods)
+          if (typeof handler.route !== 'undefined') customLog(handler.route.path, handler.route.methods)
         })
       }
     })

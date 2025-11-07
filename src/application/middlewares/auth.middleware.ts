@@ -7,6 +7,7 @@ import { AppErrorResponse } from '@app/models/app.response'
 import { verifyAdvisorToken, verifyBackofficeToken, verifyCommerceToken, verifyFranchiseToken } from '@app/utils/auth.util'
 /* dtos */
 import { type IFranchiseTokenPayload, type IAdvisorTokenPayload, type IBackofficeUserTokenPayload, type IUserTokenPayload } from '@app/dtos/auth.dto'
+import { customLog } from '@app/utils/util.util'
 // import { getPermissions } from '@app/constants/security'
 
 export function commerceMiddleware (req: Request, res: Response, next: NextFunction): void {
@@ -22,7 +23,7 @@ export function commerceMiddleware (req: Request, res: Response, next: NextFunct
     res.locals.user = verified
     next()
   } catch (error) {
-    console.log(error)
+    customLog(error)
     const { statusCode, error: err } = appErrorResponseHandler(error)
     res.status(statusCode).json({ error: err })
   }

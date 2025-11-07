@@ -17,6 +17,7 @@ import { EDepositStatus, ETefStatus, ETransactionStatus, ETransactionType, type 
 import { getCardBrand, getCardBrandRegex } from '@app/utils/card.util'
 import { holidays } from '@app/constants/holidays'
 import { appProfilesInstance } from '@app/repositories/axios'
+import { customLog } from '@app/utils/util.util'
 // import { appProfilesInstance } from '@app/repositories/profiles'
 // import { AppErrorResponse } from '@app/models/app.response'
 
@@ -274,7 +275,7 @@ export class TransactionResumeService {
       const commerceId = transaction.commerce
       const minEcommerceDaysToDisperse = names[String(commerceId)]?.minEcommerceDaysToDisperse
       const readyToDisperse = this.checkTransactionReadyToDisperse(transaction, endDate, minEcommerceDaysToDisperse)
-      console.log(transaction['Transaction Date'], transaction.type, readyToDisperse, transaction['ID Transaction'])
+      customLog(transaction['Transaction Date'], transaction.type, readyToDisperse, transaction['ID Transaction'])
       if (!readyToDisperse) return
 
       if (groupedTransactions[commerceId] === undefined && transaction.toDepositGreaterThanDeposited === true) {

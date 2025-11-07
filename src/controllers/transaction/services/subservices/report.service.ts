@@ -7,7 +7,7 @@ import { ETefStatus, ETransactionStatus } from '@app/interfaces/transaction.inte
 import { TerminalModel, TransactionModel } from '@app/repositories/mongoose/models'
 import { translate } from '@app/utils/translate'
 import { convertirAMesYAnio, formatTimestamp, getStringDate } from '@app/utils/date.util'
-import { concatObjs, sumField } from '@app/utils/util.util'
+import { concatObjs, customLog, sumField } from '@app/utils/util.util'
 import { appProfilesInstance } from '@app/repositories/axios'
 import { AppErrorResponse } from '@app/models/app.response'
 import { type ITerminal } from '@app/interfaces/terminal.interface'
@@ -25,7 +25,7 @@ export class TransactionReportService {
     const endDate = query?.endDate != null ? query?.endDate : '999999'
     const brand = query.brand
     const cardRegex = getCardBrandRegex(brand)
-    console.log(startDate, endDate, cardRegex)
+    customLog(startDate, endDate, cardRegex)
 
     const filter: FilterQuery<ITransaction> = {
       'Transaction Date': { $gte: startDate, $lte: endDate },
@@ -61,7 +61,7 @@ export class TransactionReportService {
   }
 
   async getTransactionsReport2 (query: any, locals: IUserLocals): Promise<any> {
-    console.log('3')
+    customLog('3')
     const startDate = (query?.startDate != null ? query?.startDate : '000000') as string
     const endDate = (query?.endDate != null ? query?.endDate : '999999') as string
     const brand = query.brand
@@ -314,14 +314,14 @@ export class TransactionReportService {
 
     if (query.commerce !== null && query.commerce !== 'all') filter.commerce = query.commerce
 
-    console.log(filter)
+    customLog(filter)
 
     const transactions: any = await TransactionModel.find(filter, undefined, {
       sort: { 'Transaction Date': 1, 'Transaction Time': 1 },
       allowDiskUse: true
     })
 
-    console.log(transactions.length)
+    customLog(transactions.length)
 
     const commerceIds = [...new Set(transactions.map((transactions: any) => String(transactions.commerce)))]
     const response = await appProfilesInstance.get(`user/backoffice/getCommercesInfo/?ids[]=${commerceIds.join('&ids[]=')}`)
@@ -900,7 +900,7 @@ export class TransactionReportService {
     firstMonthResults.forEach((result: any) => {
       firstMonthResultObject[String(result.commerce)] = result.firstMonth
     })
-    console.log(firstMonthResultObject)
+    customLog(firstMonthResultObject)
 
     const aggregationPipeline = [
       {
@@ -973,7 +973,7 @@ export class TransactionReportService {
     //   })
     // })
     // const commerceIds = Array.from(commerceIdsSet)
-    // console.log(commerceIds)
+    // customLog(commerceIds)
 
     const franchiseSummariescopy = JSON.parse(JSON.stringify(franchiseSummaries))
     for (const doc of franchiseSummariescopy) {
@@ -998,9 +998,9 @@ export class TransactionReportService {
       doc.totalNewCommercesComission = totalNewCommercesComission
       doc.totalMonthlyComission = totalMonthlyComission
     }
-    // console.log(franchiseSummariescopy)
-    // console.log(franchiseSummariescopy[0])
-    // console.log(franchiseSummariescopy[0].commerceArray[0].data)
+    // customLog(franchiseSummariescopy)
+    // customLog(franchiseSummariescopy[0])
+    // customLog(franchiseSummariescopy[0].commerceArray[0].data)
 
     const mappedSummaries = franchiseSummariescopy.map((doc: any) => {
       return {
@@ -1013,7 +1013,7 @@ export class TransactionReportService {
       }
     })
 
-    // console.log(mappedSummaries)
+    // customLog(mappedSummaries)
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Report')
@@ -1450,7 +1450,7 @@ export class TransactionReportService {
     const transactions: any[] = await TransactionModel.aggregate(aggregationPipeline as any)
     const transactionsCopy = JSON.parse(JSON.stringify(transactions))
     const months: any[] = [...new Set(transactionsCopy.map((line: any) => String(line.month)))].sort((a: any, b: any) => a.toLowerCase().localeCompare(b.toLowerCase()))
-    console.log(months)
+    customLog(months)
 
     // Se crea un elemento por comercio por mes
     const commercesByMonth: any[] = []
@@ -1479,8 +1479,8 @@ export class TransactionReportService {
       }
       commercesByMonth.push(monthArray)
     }
-    console.log(commercesByMonth.flat().length)
-    console.log(commerces.length)
+    customLog(commercesByMonth.flat().length)
+    customLog(commerces.length)
 
     // Se juntan los elementos de cada mes por comercio en un solo elemento (linea)
     const concatCommercesByMonth = []
@@ -1518,10 +1518,10 @@ export class TransactionReportService {
 
     const offset = 9
     const detN = 7 // detail cells quantity
-    console.log(offset, detN)
+    customLog(offset, detN)
     for (let j = 0; j < months.length; j++) {
       const startCol = offset + j * detN
-      console.log(1, startCol, 1, startCol + detN - 1)
+      customLog(1, startCol, 1, startCol + detN - 1)
       worksheet.mergeCells(1, startCol, 1, startCol + detN - 1)
       worksheet.getCell(1, startCol).value = convertirAMesYAnio(months[j])
       worksheet.getCell(1, startCol).fill = headerStyle
@@ -1633,7 +1633,7 @@ export class TransactionReportService {
     const transactions: any[] = await TransactionModel.aggregate(aggregationPipeline as any)
     const transactionsCopy = JSON.parse(JSON.stringify(transactions))
 
-    // console.log('tcopy', transactionsCopy)
+    // customLog('tcopy', transactionsCopy)
 
     const rowArray = []
 
@@ -1677,7 +1677,7 @@ export class TransactionReportService {
         franchiseComission
       })
     }
-    // console.log(rowArray)
+    // customLog(rowArray)
 
     // ------------------- Construir archivo excel ----------------------------------------------------
     const workbook = new ExcelJS.Workbook()

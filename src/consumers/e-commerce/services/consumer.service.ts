@@ -175,7 +175,7 @@ export class ConsumerService {
       ]
       await appSendEmail(excelReportRecipients, 'Reporte de transacciones', '', attachments)
     } catch (error) {
-      console.error('Error al guardar el archivo:', error)
+      customLog('Error al guardar el archivo:', error)
     }
     await mainProducer.send([{ key: 'tef-read-update-done', value: '' }])
     return null

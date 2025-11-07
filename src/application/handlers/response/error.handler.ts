@@ -3,6 +3,7 @@ import { AxiosError } from 'axios'
 import { AppErrorResponse, AppResponse } from '@app/models/app.response'
 import type { IErrorHandlerResponse } from './dtos/error-handler.dto'
 import { TokenExpiredError } from 'jsonwebtoken'
+import { customLog } from '@app/utils/util.util'
 
 export function appErrorResponseHandler (error: unknown | any): IErrorHandlerResponse {
   const result = new AppResponse()
@@ -29,7 +30,7 @@ export function appErrorResponseHandler (error: unknown | any): IErrorHandlerRes
 
   if (error instanceof AxiosError) {
     const axiosError = error?.response?.data
-    console.log('Error axios:', axiosError?.statusCode, axiosError?.name)
+    customLog('Error axios:', axiosError?.statusCode, axiosError?.name)
     return { statusCode: error.status ?? 500, error: error.response?.data }
   }
 

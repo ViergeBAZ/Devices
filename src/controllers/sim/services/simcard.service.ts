@@ -7,6 +7,7 @@ import type { ClientSession } from 'mongoose'
 import type { Types } from '@app/repositories/mongoose'
 import { ESimcardStatus, SimcardModel } from '@app/repositories/mongoose/models/simcard.model '
 import { type ICreateSimcardData } from './dtos/simcard.dto'
+import { customLog } from '@app/utils/util.util'
 
 class SimcardService {
   async getSimcards (query: any): Promise<typeof data> {
@@ -43,7 +44,7 @@ class SimcardService {
   async assignSimcardFranchise (idSimcard: Types.ObjectId, idFranchise: Types.ObjectId, session: ClientSession): Promise<typeof data> {
     const simcard = await SimcardModel.findOne({ _id: idSimcard, active: true, pending: false }, undefined, { session })
     if (simcard == null) throw new AppErrorResponse({ name: 'Simcard no encontrada', description: 'Simcard no encontrada', isOperational: true, statusCode: 404 })
-    console.log(idFranchise)
+    customLog(idFranchise)
     simcard.franchiseId = idFranchise
     simcard.status = ESimcardStatus.FRANCHISE
     const data = await simcard.save({ validateBeforeSave: true, validateModifiedOnly: true, session })

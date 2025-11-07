@@ -13,6 +13,7 @@ import { type TpvLoginDto } from './services/dtos/tpv-login.dto'
 import { type AssingApiKeyWOtpDto } from './services/dtos/assign-apikey-w-otp.dto'
 import { type GenerateOtpDto } from './services/dtos/generate-otp.dto'
 import { type ResetApiKeyDto } from './services/dtos/reset-apikey.dto'
+import { customLog } from '@app/utils/util.util'
 
 class TerminalController {
   public async getTerminals (req: Request, res: Response): Promise<AppControllerResponse> {
@@ -191,7 +192,7 @@ class TerminalController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       await session.abortTransaction()
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
@@ -210,7 +211,7 @@ class TerminalController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       await session.abortTransaction()
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
@@ -228,7 +229,7 @@ class TerminalController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       await session.abortTransaction()
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
@@ -307,7 +308,7 @@ class TerminalController {
 
   public async resetPasscode (req: Request, res: Response): Promise<AppControllerResponse> {
     const locals = res.locals
-    console.log(locals)
+    customLog(locals)
 
     try {
       const result = await terminalService.resetPasscode(locals.user._id, locals.user.serialNumber)

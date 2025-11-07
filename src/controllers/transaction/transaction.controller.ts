@@ -15,6 +15,7 @@ import transactionReportService from './services/subservices/report.service'
 import { type ETransactionProcessor } from '@app/interfaces/transaction.interface'
 import transactionServiceV2 from './services/transactionV2.service'
 import { type TpvBatchSettlementDto } from './services/dtos/tpv-batch-settlement.dto'
+import { customLog } from '@app/utils/util.util'
 
 class TransactionController {
   public async getTransactions (req: Request, res: Response): Promise<AppControllerResponse> {
@@ -25,7 +26,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -53,7 +54,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -185,7 +186,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -199,7 +200,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -226,7 +227,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -240,7 +241,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
@@ -377,7 +378,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -394,7 +395,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -412,7 +413,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -430,7 +431,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -447,7 +448,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -464,7 +465,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -476,13 +477,13 @@ class TransactionController {
       const response = appSuccessResponseHandler('success', result)
       return res.status(200).json(response)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
 
   public async getFranchisesReportBackoffice (req: Request, res: Response): Promise<AppControllerResponse> {
-    const locals = res.locals; console.log(locals)
+    const locals = res.locals; customLog(locals)
     try {
       const query = req.query
       const result = await transactionReportService.getFranchisesReportBackoffice(query)
@@ -494,13 +495,13 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
 
   public async getFranchisesReportBackoffice2 (req: Request, res: Response): Promise<AppControllerResponse> {
-    const locals = res.locals; console.log(locals)
+    const locals = res.locals; customLog(locals)
     try {
       const query = req.query
       const result = await transactionReportService.getFranchisesReportBackoffice2(query)
@@ -512,13 +513,13 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
 
   public async getMonthlyReport (req: Request, res: Response): Promise<AppControllerResponse> {
-    const locals = res.locals; console.log(locals)
+    const locals = res.locals; customLog(locals)
     try {
       const query = req.query
       const result = await transactionReportService.getMonthlyReport(query, locals)
@@ -530,13 +531,13 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
 
   public async getMonthlyReport1 (req: Request, res: Response): Promise<AppControllerResponse> {
-    const locals = res.locals; console.log(locals)
+    const locals = res.locals; customLog(locals)
     try {
       const query = req.query
       const result = await transactionReportService.getMonthlyReport1(query, locals)
@@ -548,13 +549,13 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
 
   public async getMonthlyReport2 (req: Request, res: Response): Promise<AppControllerResponse> {
-    const locals = res.locals; console.log(locals)
+    const locals = res.locals; customLog(locals)
     try {
       const query = req.query
       const result = await transactionReportService.getMonthlyReport2(query, locals)
@@ -566,7 +567,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -584,7 +585,7 @@ class TransactionController {
       })
       return res.status(200).send(file)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       return res.status(400).json(error)
     }
   }
@@ -596,7 +597,7 @@ class TransactionController {
       const result = appSuccessResponseHandler('success', response)
       return res.status(200).json(result)
     } catch (error) {
-      console.log(error)
+      customLog(error)
       const { statusCode, error: err } = appErrorResponseHandler(error)
       return res.status(statusCode).json(err)
     }
