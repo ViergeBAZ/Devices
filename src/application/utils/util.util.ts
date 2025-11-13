@@ -9,11 +9,11 @@ export function sumField (array: any[], key: string): number {
 }
 
 export function customLog (...payloads: any[]): void {
-  //Obtiene la bandera del ambiente
-  const env = process.env.ENV
+  //Obtiene la bandera de logs
+  const logs = process.env.LOGS
 
-  //Si el ambiente es de desarrollo, imprime el log
-  if(env === 'development'){
+  //Si la bandera es true imprime el log
+  if(logs){
     const currentDate = new Date()
     const stringDate = new Intl.DateTimeFormat('es', {
       year: 'numeric',
