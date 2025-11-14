@@ -4,6 +4,7 @@ import consumerController from './consumer.controller'
 const kafka = createKafka()
 
 const appDepositsConsumer = kafka.consumer({ groupId: 'devices.devices' })
+const topic = process.env.PREFIX_TOPIC_KAFKA ?  process.env.PREFIX_TOPIC_KAFKA + 'deposits.devices': 'deposits.devices'
 
 class DepositsConsumer {
   async init (): Promise<void> {
@@ -20,7 +21,7 @@ class DepositsConsumer {
   }
 
   private async subscribe (): Promise<void> {
-    await appDepositsConsumer.subscribe({ topic: 'deposits.devices', fromBeginning: true })
+    await appDepositsConsumer.subscribe({ topic, fromBeginning: true })
   }
 
   private async streamMessages (): Promise<void> {

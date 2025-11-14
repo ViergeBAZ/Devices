@@ -5,6 +5,7 @@ import type { Message, RecordMetadata } from 'kafkajs'
 import { Kafka } from 'kafkajs'
 
 const kafka = createKafka()
+const topic = process.env.PREFIX_TOPIC_KAFKA ?  process.env.PREFIX_TOPIC_KAFKA + 'devices.deposits': 'devices.deposits'
 
 const appMainProducer = kafka.producer()
 
@@ -19,7 +20,7 @@ class MainProducer {
 
   async send (messages: Message[]): Promise<RecordMetadata[]> {
     customLog('kafka msg', messages)
-    return await appMainProducer.send({ topic: 'devices.deposits', messages })
+    return await appMainProducer.send({ topic, messages })
   }
 }
 const mainProducer: MainProducer = new MainProducer()
