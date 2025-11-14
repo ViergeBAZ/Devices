@@ -5,6 +5,7 @@ import axios from 'axios'
 import { cancelledImgPath, approvedImgPath, companyLogo, declinedImgPath, refundImgPath, unknownImgPath } from '@app/constants/default-values'
 import fs from 'fs'
 import { TransactionSignatureModel } from '@app/repositories/mongoose/models-transactions/transaction-signature.model'
+import { customLog } from '@app/utils/util.util'
 
 interface Commercial {
   address: string
@@ -35,7 +36,7 @@ function extractSignatureImage (data: any): Buffer | null {
 
     return null
   } catch (error) {
-    console.error('Error extracting signature image:', error)
+    customLog('Error extracting signature image:', error)
     return null
   }
 }
@@ -52,7 +53,7 @@ async function getTransactionSignature (transactionId: string): Promise<Buffer |
 
     return null
   } catch (error) {
-    console.error(`[TX:${transactionId}] Error al obtener la firma:`, error)
+    customLog(`[TX:${transactionId}] Error al obtener la firma:`, error)
     return null
   }
 }
@@ -62,7 +63,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
   try {
     logoBuffer = await fetchImageBuffer(companyLogo)
   } catch (err) {
-    console.warn('No se pudo cargar el logo remoto:', err)
+    customLog('No se pudo cargar el logo remoto:', err)
   }
 
   // Obtener la firma si la transacción tiene signature flag
@@ -185,7 +186,7 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
         })
         posY += signatureHeight + 10
       } catch (error) {
-        console.error('Error al agregar la firma al PDF:', error instanceof Error ? error.message : String(error))
+        customLog('Error al agregar la firma al PDF:', error instanceof Error ? error.message : String(error))
         doc.text('Error al cargar la firma', startX, posY)
         posY += 15
       }

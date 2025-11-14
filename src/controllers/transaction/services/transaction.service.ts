@@ -425,7 +425,7 @@ class TransactionService extends TransactionResumeService {
     const cancelledTodayTransactions = approvedAndCancelledToday.transactionsCancelledToday
     const totalAmountApproved = approvedTodayTransactions.reduce((total: number, transaction: any) => { return total + Number(transaction.Amount) }, 0)
     const totalAmountCancelled = cancelledTodayTransactions.reduce((total: number, transaction: any) => { return total + Number(transaction.Amount) }, 0)
-    console.log('asd', totalAmountApproved, totalAmountCancelled)
+    customLog('asd', totalAmountApproved, totalAmountCancelled)
 
     const transaccionsFixed = [...transactions].map((transaction: any) => {
       const currentDate = new Date()
@@ -478,7 +478,7 @@ class TransactionService extends TransactionResumeService {
 
     const resultFixed = result.filter((innerArray) => Array.isArray(innerArray) && innerArray.length > 0)
 
-    console.log(resultFixed[0])
+    customLog(resultFixed[0])
 
     const summed = resultFixed[0].reduce((a: any, b: any) => {
       return {
@@ -642,7 +642,7 @@ class TransactionService extends TransactionResumeService {
       })
     }
 
-    console.log(finalObject)
+    customLog(finalObject)
 
     return { resultado: finalObject }
   }
@@ -722,7 +722,7 @@ class TransactionService extends TransactionResumeService {
     const filteredTransactions = await TransactionModel.find(filter).select({ epn: 0 })
     const filtered = filteredTransactions.filter((e) => e.toDeposit > e.deposited).filter((e) => this.checkTransactionReadyToDisperse(e, endDate))
     const total = filtered.reduce((accumulator, e) => accumulator + e.toDeposit - e.deposited, 0)
-    console.log(total)
+    customLog(total)
     return total
   }
 

@@ -55,7 +55,7 @@ class TransactionServiceV2 {
       }
     }
 
-    console.log('filter', filter)
+    customLog('filter', filter)
 
     const records = await TransactionModel.find(filter).select(selection).limit(limit)
     return populated === 1 ? await this.populateResults(records) : records

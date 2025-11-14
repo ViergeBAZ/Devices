@@ -1,5 +1,6 @@
 /* dtos */
 import { createKafka } from '@app/utils/kafka.util'
+import { customLog } from '@app/utils/util.util'
 import type { Message, RecordMetadata } from 'kafkajs'
 import { Kafka } from 'kafkajs'
 
@@ -18,7 +19,7 @@ class MainProducer {
   }
 
   async send (messages: Message[]): Promise<RecordMetadata[]> {
-    console.log('kafka msg', messages)
+    customLog('kafka msg', messages)
     return await appMainProducer.send({ topic, messages })
   }
 }
