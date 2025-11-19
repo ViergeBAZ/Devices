@@ -675,7 +675,8 @@ export class TransactionReportService {
           Descripcion: '$ISO CODE DESCRIPTION',
           'Numero de Autorizacion': { $arrayElemAt: ['$MIT Fields.38', 0] },
           TxnReference: '$txnReference',
-          'Numero de Afiliacion': '$ID Afiliate'
+          'Numero de Afiliacion': '$ID Afiliate',
+          'Tipo de Tarjeta': '$Card Type'
         }
       }
     ])
