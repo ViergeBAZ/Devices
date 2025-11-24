@@ -163,7 +163,8 @@ export async function createTxVoucherPdf (transaction: ITransaction, commerce: a
     drawRow('Secuencia:', extractSequence(transaction.tlv) ?? '-----')
     drawRow('AID:', extractAID(transaction.tlv) ?? '-----')
     drawRow('ARQC:', extractARQC(transaction.tlv) ?? '-----')
-    drawRow('AUTORIZADO:', translateReadMode(transaction.readMode, signatureBuffer != null))
+    const cvmIndicator = extractCVMIndicator(transaction.tlvTags)
+    drawRow('AUTORIZADO:', translateReadMode(transaction.readMode, cvmIndicator))
     doc.y = posY
 
     // Agregar firma si existe
@@ -269,16 +270,40 @@ function extractSequence (tlv: string | undefined): string | undefined {
   return tlv.substr(index + 6, len * 2)
 }
 
-function translateReadMode (code: string, hasSignature: boolean = false): string {
+function extractCVMIndicator (tlvTags: any): string | undefined {
+  if (tlvTags == null || typeof tlvTags !== 'object') return undefined
+
+  const tag9F34 = tlvTags['9F34']
+  if (tag9F34 == null || typeof tag9F34 !== 'string') return undefined
+
+  // El tag 9F34 tiene 3 bytes (6 caracteres hex), extraemos solo el primer byte (2 caracteres)
+  return tag9F34.substring(0, 2)
+}
+
+function translateReadMode (code: string, cvmIndicator: string | undefined): string {
   switch (code) {
     case '01':
       return 'Tarjeta digitada'
     case '80':
       return 'Fallback'
     case '05':
-      return hasSignature ? 'Chip + firma' : 'Autorizado con Chip + NIP'
+      // Verificar el indicador CVM del tag 9F34
+      if (cvmIndicator === '1F') {
+        return 'Autorizado sin firma'
+      } else if (cvmIndicator === '1E') {
+        return 'Autorizado con Chip + firma'
+      } else {
+        return 'Autorizado con Chip + NIP'
+      }
     case '07':
-      return hasSignature ? 'Autorizado con firma' : 'Autorizado sin contacto'
+      // Verificar el indicador CVM del tag 9F34
+      if (cvmIndicator === '1F') {
+        return 'Autorizado sin contacto'
+      } else if (cvmIndicator === '1E') {
+        return 'Autorizado con firma'
+      } else {
+        return 'Autorizado sin contacto'
+      }
     default:
       return 'Desconocido'
   }
