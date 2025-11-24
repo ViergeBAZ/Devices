@@ -647,7 +647,7 @@ class TransactionController {
       const file = result.file ?? null
       const fileName: string = result.fileName ?? ''
       res.set({
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="' + fileName + '"'
       })
       return res.status(200).send(file)
