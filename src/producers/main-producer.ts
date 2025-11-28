@@ -2,10 +2,9 @@
 import { createKafka } from '@app/utils/kafka.util'
 import { customLog } from '@app/utils/util.util'
 import type { Message, RecordMetadata } from 'kafkajs'
-import { Kafka } from 'kafkajs'
 
 const kafka = createKafka()
-const topic = process.env.PREFIX_TOPIC_KAFKA ?  process.env.PREFIX_TOPIC_KAFKA + 'devices.deposits': 'devices.deposits'
+const topic = process.env.PREFIX_TOPIC_KAFKA ? process.env.PREFIX_TOPIC_KAFKA + 'devices.deposits' : 'devices.deposits'
 
 const appMainProducer = kafka.producer()
 

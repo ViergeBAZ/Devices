@@ -1,5 +1,5 @@
 import { AppMongooseRepo2 } from '@app/repositories/mongoose/index-transactions'
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 import { ETefStatus, ETransactionProcessor, ETransactionStatus, type ITransaction, type TTransactionModel } from './transactions-interface'
 import { customLog } from '@app/utils/util.util'
 import { mask } from '@app/utils/card.util'

@@ -4,7 +4,7 @@ import { TerminalModel, TransactionModel } from '@app/repositories/mongoose/mode
 import { messageHandler } from '@app/handlers/kafka'
 /* dtos */
 import type { KafkaMessage } from 'kafkajs'
-import { EDepositStatus, EOperationType, ETefStatus, ETransactionStatus, ETransactionType } from '@app/interfaces/transaction.interface'
+import { EDepositStatus, type EOperationType, ETefStatus, ETransactionStatus, ETransactionType } from '@app/interfaces/transaction.interface'
 import { appSendEmail } from '@app/utils/mail.util'
 import { getStringDate } from '@app/utils/date.util'
 import { excelReportRecipients } from '@app/constants/mail.constants'

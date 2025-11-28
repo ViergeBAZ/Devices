@@ -547,8 +547,8 @@ class TerminalService {
     terminal.otpStatus = ETerminalOtpStatus.SUCCESS
     await terminal.save({ validateBeforeSave: true, validateModifiedOnly: true })
 
-    const commerce = await getCommerce(String(terminal.commerce), ['email'])
-    const commerceEmail = commerce.email
+    // const commerce = await getCommerce(String(terminal.commerce), ['email'])
+    // const commerceEmail = commerce.email
 
     // if (commerceEmail != null && commerceEmail !== '') {
     //   const template = resetTpvPasscodeTemplate({ serialNumber: terminal.serialNumber, passcode: otp })

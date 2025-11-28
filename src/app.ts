@@ -87,7 +87,7 @@ export class AppServer {
   }
 
   routes (): void {
-    const apiRouter = express.Router();
+    const apiRouter = express.Router()
 
     apiRouter.use('/terminal', terminalRoutes)
     apiRouter.use('/simcard', simcardRoutes)

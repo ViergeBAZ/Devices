@@ -4,7 +4,7 @@ import consumerController from './consumer.controller'
 const kafka = createKafka()
 
 const appDepositsConsumer = kafka.consumer({ groupId: 'devices.devices' })
-const topic = process.env.PREFIX_TOPIC_KAFKA ?  process.env.PREFIX_TOPIC_KAFKA + 'deposits.devices': 'deposits.devices'
+const topic = process.env.PREFIX_TOPIC_KAFKA ? process.env.PREFIX_TOPIC_KAFKA + 'deposits.devices' : 'deposits.devices'
 
 class DepositsConsumer {
   async init (): Promise<void> {

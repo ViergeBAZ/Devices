@@ -1,6 +1,6 @@
 import * as ExcelJS from 'exceljs'
 import { Parser } from 'json2csv'
-import mongoose, { type FilterQuery } from 'mongoose'
+import { type FilterQuery } from 'mongoose'
 import { type IUserLocals, type ITransaction } from '../dtos/transaction.dto'
 import { getCardBrandRegex } from '@app/utils/card.util'
 import { ETefStatus, ETransactionStatus } from '@app/interfaces/transaction.interface'
